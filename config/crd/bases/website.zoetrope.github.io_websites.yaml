@@ -16,7 +16,14 @@ spec:
     singular: website
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .status.ready
+      name: READY
+      type: string
+    - jsonPath: .status.revision
+      name: REVISION
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: WebSite is the Schema for the websites API
@@ -32,16 +39,55 @@ spec:
           spec:
             description: WebSiteSpec defines the desired state of WebSite
             properties:
-              foo:
-                description: Foo is an example field of WebSite. Edit WebSite_types.go to remove/update
+              branch:
+                default: main
+                description: RepoURL is the branch name of the repository
                 type: string
+              buildImage:
+                description: BuildImage is the container image name that will be used to build the website
+                type: string
+              buildScript:
+                description: BuildScript is the script to build the website
+                type: string
+              deployKeySecretName:
+                description: DeployKeySecretName is the name of the secret resource that contains the deploy key to access the private repository
+                type: string
+              postBuildResources:
+                description: PostBuildResources are resources that will be applied after the build step
+                items:
+                  type: string
+                type: array
+              preBuildResources:
+                description: PreBuildResources are resources that will be applied before the build step
+                items:
+                  type: string
+                type: array
+              repoURL:
+                description: RepoURL is the URL of the repository that has contents of the website
+                type: string
+            required:
+            - buildImage
+            - buildScript
+            - repoURL
             type: object
           status:
             description: WebSiteStatus defines the observed state of WebSite
+            properties:
+              ready:
+                description: Ready is the current status
+                type: string
+              revision:
+                description: Revision is a revision currently available to the public
+                type: string
+            required:
+            - ready
+            - revision
             type: object
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""

@@ -53,7 +53,7 @@ push-operator-image:
 	docker push ${REGISTRY}website-operator:${TAG}
 
 build-checker-image: $(REPO_CHECKER)
-	cp $(REPO_CHECKER) ./docker/website-operator
+	cp $(REPO_CHECKER) ./docker/repo-checker
 	docker build --no-cache -t ${REGISTRY}repo-checker:${TAG} ./docker/repo-checker
 
 # Push the docker image
