@@ -1,0 +1,7 @@
+domain: zoetrope.github.io
+repo: github.com/zoetrope/website-operator
+resources:
+- group: website
+  kind: WebSite
+  version: v1beta1
+version: "2"
