@@ -1,6 +1,6 @@
 include common.mk
 
-IMG = ghcr.io/zoetrope/website-operator
+REGISTRY = ghcr.io/zoetrope/
 TAG ?= latest
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 
@@ -11,14 +11,16 @@ CONTROLLER_GEN := $(PWD)/bin/controller-gen
 KUBEBUILDER := $(PWD)/bin/kubebuilder
 
 WEBSITE_OPERATOR = build/website-operator
+REPO_CHECKER = build/repo-checker
 GO_FILES := $(shell find . -type f -name '*.go')
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 
-all: $(WEBSITE_OPERATOR)
+all: $(WEBSITE_OPERATOR) $(REPO_CHECKER)
 
 # Run tests
 test: generate manifests setup
+	chmod 0600 .ssh/id_rsa
 	go test -race -v -count 1 ./...
 	go vet ./...
 	test -z $$(gofmt -s -l . | tee /dev/stderr)
@@ -28,6 +30,10 @@ test: generate manifests setup
 $(WEBSITE_OPERATOR): $(GO_FILES) generate
 	mkdir -p build
 	go build -o $@ ./cmd/website-operator
+
+$(REPO_CHECKER): $(GO_FILES)
+	mkdir -p build
+	go build -o $@ ./cmd/repo-checker
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: $(CONTROLLER_GEN)
@@ -40,11 +46,19 @@ generate: $(CONTROLLER_GEN)
 # Build the docker image
 build-operator-image: $(WEBSITE_OPERATOR)
 	cp $(WEBSITE_OPERATOR) ./docker/website-operator
-	docker build --no-cache -t ${IMG}:${TAG} ./docker/website-operator
+	docker build --no-cache -t ${REGISTRY}website-operator:${TAG} ./docker/website-operator
 
 # Push the docker image
 push-operator-image:
-	docker push ${IMG}:${TAG}
+	docker push ${REGISTRY}website-operator:${TAG}
+
+build-checker-image: $(REPO_CHECKER)
+	cp $(REPO_CHECKER) ./docker/website-operator
+	docker build --no-cache -t ${REGISTRY}repo-checker:${TAG} ./docker/repo-checker
+
+# Push the docker image
+push-checker-image:
+	docker push ${REGISTRY}repo-checker:${TAG}
 
 .PHONY: setup
 setup: staticcheck $(KUBEBUILDER) $(CONTROLLER_GEN)
