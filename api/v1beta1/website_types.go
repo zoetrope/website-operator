@@ -15,7 +15,7 @@ type WebSiteSpec struct {
 
 	// PreBuildResources are resources that will be applied before the build step
 	// +optional
-	PreBuildResources []string `json:"preBuildResources"`
+	PreBuildResources []string `json:"preBuildResources,omitempty"`
 
 	// BuildImage is the container image name that will be used to build the website
 	// +kubebuiler:validation:Required
@@ -36,11 +36,11 @@ type WebSiteSpec struct {
 
 	// DeployKeySecretName is the name of the secret resource that contains the deploy key to access the private repository
 	// +optional
-	DeployKeySecretName *string `json:"deployKeySecretName"`
+	DeployKeySecretName *string `json:"deployKeySecretName,omitempty"`
 
 	// PostBuildResources are resources that will be applied after the build step
 	// +optional
-	PostBuildResources []string `json:"postBuildResources"`
+	PostBuildResources []string `json:"postBuildResources,omitempty"`
 }
 
 // WebSiteStatus defines the observed state of WebSite

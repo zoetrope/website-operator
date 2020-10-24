@@ -22,6 +22,7 @@ func init() {
 	_ = websitev1beta1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
+
 func subMain() error {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
@@ -38,9 +39,11 @@ func subMain() error {
 	}
 
 	if err = (&controllers.WebSiteReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("WebSite"),
-		Scheme: mgr.GetScheme(),
+		Client:                    mgr.GetClient(),
+		Log:                       ctrl.Log.WithName("controllers").WithName("WebSite"),
+		Scheme:                    mgr.GetScheme(),
+		NginxContainerImage:       config.nginxContainerImage,
+		RepoCheckerContainerImage: config.repoCheckerContainerImage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "WebSite")
 		return err

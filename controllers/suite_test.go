@@ -4,17 +4,21 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/zoetrope/website-operator"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/client-go/kubernetes/scheme"
+	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -24,6 +28,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var reconciler *WebSiteReconciler
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -46,14 +51,25 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(cfg).ToNot(BeNil())
 
-	err = websitev1beta1.AddToScheme(scheme.Scheme)
+	sch := runtime.NewScheme()
+	err = websitev1beta1.AddToScheme(sch)
+	Expect(err).NotTo(HaveOccurred())
+	err = clientgoscheme.AddToScheme(sch)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	k8sClient, err = client.New(cfg, client.Options{Scheme: sch})
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
+
+	reconciler = &WebSiteReconciler{
+		Client:                    k8sClient,
+		Log:                       ctrl.Log.WithName("controllers").WithName("WebSite"),
+		Scheme:                    sch,
+		NginxContainerImage:       website.DefaultNginxContainerImage,
+		RepoCheckerContainerImage: website.DefaultRepoCheckerContainerImage,
+	}
 
 	close(done)
 }, 60)
