@@ -8,13 +8,26 @@ GO_FILES := $(shell find .. -path ../vendor -prune -o -path ../e2e -prune -o -na
 
 launch-kind: kind
 	if [ ! "$(shell kind get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
-		kind create cluster --name=$(KIND_CLUSTER_NAME) --image kindest/node:v$(KUBERNETES_VERSION); \
+		kind create cluster --name=$(KIND_CLUSTER_NAME) --config kind-config.yaml --image kindest/node:v$(KUBERNETES_VERSION) --wait 180s; \
+		echo "127.0.0.1\twebsite-operator.example.com\n" | sudo tee -a /etc/hosts > /dev/null; \
 	fi
 
 shutdown-kind: kind
 	if [ "$(shell kind get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
 		kind delete cluster --name=$(KIND_CLUSTER_NAME) || true; \
+		sudo sed -i -e '/website-operator.example.com/d' /etc/hosts; \
 	fi
+
+setup-cluster:
+	$(KUBECTL) apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml
+	$(KUBECTL) wait pod --all -n cert-manager --for condition=Ready
+
+	$(KUBECTL) create ns prometheus
+	helm install prometheus stable/prometheus-operator --namespace=prometheus --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+	$(KUBECTL) wait pod --all -n prometheus --for condition=Ready --timeout 180s
+
+	$(KUBECTL) apply -f https://projectcontour.io/quickstart/contour.yaml
+	$(KUBECTL) wait pod --all -n projectcontour --for condition=Ready
 
 test: launch-kind load-images $(KUBECTL) $(KUSTOMIZE)
 	$(KUBECTL) config use-context kind-$(KIND_CLUSTER_NAME)
@@ -22,7 +35,7 @@ test: launch-kind load-images $(KUBECTL) $(KUSTOMIZE)
 	#env E2ETEST=1 go test -count=1 -v . -args -ginkgo.progress -ginkgo.v
 
 .PHONY: load-images
-load-images: load-operator-images load-checker-image
+load-images: load-operator-images load-checker-image load-nginx-image load-node-image
 
 .PHONY: load-operator-images
 load-operator-images:
