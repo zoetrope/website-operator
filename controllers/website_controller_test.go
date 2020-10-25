@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var _ = Describe("MySQLCluster controller", func() {
+var _ = Describe("WebSite controller", func() {
 
 	ctx := context.Background()
 
@@ -21,14 +21,26 @@ var _ = Describe("MySQLCluster controller", func() {
 		It("should be create ", func() {
 			site := createWebSiteResource()
 
-			isUpdated, err := reconciler.reconcileRepoChecker(ctx, site)
+			isUpdated, err := reconciler.reconcileRepoCheckerDeployment(ctx, site)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(isUpdated).Should(BeTrue())
+
+			isUpdated, err = reconciler.reconcileRepoCheckerDeployment(ctx, site)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(isUpdated).Should(BeFalse())
 		})
 	})
 })
 
 func createWebSiteResource() *websitev1beta1.WebSite {
+	buildScript := `#!/bin/bash -ex
+cd $HOME
+git clone $REPO_URL
+cd $REPO_NAME
+git checkout $REVISION
+npm install && npm run build
+cp -r _book/* /data/
+`
 	site := &websitev1beta1.WebSite{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "WebSite",
@@ -41,9 +53,11 @@ func createWebSiteResource() *websitev1beta1.WebSite {
 		Spec: websitev1beta1.WebSiteSpec{
 			PreBuildResources: nil,
 			BuildImage:        "ghcr.io/zoetrope/node:12.19.0",
-			BuildScript:       "npm run build",
-			RepoURL:           "https://github.com/zoetrope/honkit-sample.git",
-			Branch:            "main",
+			BuildScript: websitev1beta1.DataSource{
+				RawData: &buildScript,
+			},
+			RepoURL: "https://github.com/zoetrope/honkit-sample.git",
+			Branch:  "main",
 		},
 	}
 	err := k8sClient.Create(context.Background(), site)

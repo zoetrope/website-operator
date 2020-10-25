@@ -43,6 +43,11 @@ func (c *RepoChecker) Clone(ctx context.Context) error {
 }
 
 func (c *RepoChecker) UpdateLatestRevision(ctx context.Context) error {
+	err := c.fetchRemoteRevision(ctx)
+	if err != nil {
+		return err
+	}
+
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
 

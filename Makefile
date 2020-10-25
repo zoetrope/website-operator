@@ -1,6 +1,5 @@
 include common.mk
 
-REGISTRY = ghcr.io/zoetrope/
 TAG ?= latest
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 
@@ -20,7 +19,7 @@ all: $(WEBSITE_OPERATOR) $(REPO_CHECKER)
 
 # Run tests
 test: generate manifests setup
-	chmod 0600 .ssh/id_rsa
+	chmod 0600 e2e/manifests/.ssh/id_rsa
 	go test -race -v -count 1 ./...
 	go vet ./...
 	test -z $$(gofmt -s -l . | tee /dev/stderr)

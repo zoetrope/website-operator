@@ -15,7 +15,7 @@ type WebSiteSpec struct {
 
 	// PreBuildResources are resources that will be applied before the build step
 	// +optional
-	PreBuildResources []string `json:"preBuildResources,omitempty"`
+	PreBuildResources []DataSource `json:"preBuildResources,omitempty"`
 
 	// BuildImage is the container image name that will be used to build the website
 	// +kubebuiler:validation:Required
@@ -23,7 +23,7 @@ type WebSiteSpec struct {
 
 	// BuildScript is the script to build the website
 	// +kubebuiler:validation:Required
-	BuildScript string `json:"buildScript"`
+	BuildScript DataSource `json:"buildScript"`
 
 	// RepoURL is the URL of the repository that has contents of the website
 	// +kubebuiler:validation:Required
@@ -40,7 +40,19 @@ type WebSiteSpec struct {
 
 	// PostBuildResources are resources that will be applied after the build step
 	// +optional
-	PostBuildResources []string `json:"postBuildResources,omitempty"`
+	PostBuildResources []DataSource `json:"postBuildResources,omitempty"`
+}
+
+// DataSource represents the source of data.
+// Only one of its members may be specified.
+type DataSource struct {
+	// ConfigMapName is the name of the ConfigMap
+	// +optional
+	ConfigMapName *string `json:"configMapName,omitempty"`
+
+	// RawData is raw data
+	// +optional
+	RawData *string `json:"rawData,omitempty"`
 }
 
 // WebSiteStatus defines the observed state of WebSite

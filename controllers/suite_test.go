@@ -4,16 +4,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/zoetrope/website-operator"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/zoetrope/website-operator"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
@@ -63,13 +61,14 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
 
-	reconciler = &WebSiteReconciler{
-		Client:                    k8sClient,
-		Log:                       ctrl.Log.WithName("controllers").WithName("WebSite"),
-		Scheme:                    sch,
-		NginxContainerImage:       website.DefaultNginxContainerImage,
-		RepoCheckerContainerImage: website.DefaultRepoCheckerContainerImage,
-	}
+	reconciler = NewWebSiteReconciler(
+		k8sClient,
+		ctrl.Log.WithName("controllers").WithName("WebSite"),
+		sch,
+		website.DefaultNginxContainerImage,
+		website.DefaultRepoCheckerContainerImage,
+		"default",
+	)
 
 	close(done)
 }, 60)

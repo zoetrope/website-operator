@@ -40,7 +40,7 @@ func Execute() {
 
 func init() {
 	fs := rootCmd.Flags()
-	fs.StringVar(&config.listenAddr, "listen-addr", ":8080", "The address the endpoint binds to")
+	fs.StringVar(&config.listenAddr, "listen-addr", ":9090", "The address the endpoint binds to")
 	fs.StringVar(&config.repoURL, "repo-url", "", "The URL of the repository to be checked")
 	fs.StringVar(&config.repoBranch, "repo-branch", "master", "The branch name of the repository")
 	fs.StringVar(&config.workDir, "work-dir", "/tmp/repos", "The working directory")

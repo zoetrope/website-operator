@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/cybozu-go/well"
 	"github.com/go-logr/logr"
@@ -12,7 +14,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -23,23 +24,36 @@ import (
 )
 
 const (
-	MyName            = "website-operator"
+	OperatorName      = "website-operator"
 	AppName           = "website"
 	ManagedByKey      = "app.kubernetes.io/managed-by"
 	AppNameKey        = "app.kubernetes.io/name"
 	InstanceKey       = "app.kubernetes.io/instance"
 	RepoCheckerPort   = 9090
 	RepoCheckerSuffix = "-repo-checker"
+	BuildScriptSuffix = "-build-script"
 	NginxPort         = 8080
 )
 
+func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime.Scheme, nginxContainerImage string, repoCheckerContainerImage string, operatorNamespace string) *WebSiteReconciler {
+	return &WebSiteReconciler{
+		client:                    client,
+		log:                       log,
+		scheme:                    scheme,
+		nginxContainerImage:       nginxContainerImage,
+		repoCheckerContainerImage: repoCheckerContainerImage,
+		operatorNamespace:         operatorNamespace,
+	}
+}
+
 // WebSiteReconciler reconciles a WebSite object
 type WebSiteReconciler struct {
-	client.Client
-	Log                       logr.Logger
-	Scheme                    *runtime.Scheme
-	NginxContainerImage       string
-	RepoCheckerContainerImage string
+	client                    client.Client
+	log                       logr.Logger
+	scheme                    *runtime.Scheme
+	nginxContainerImage       string
+	repoCheckerContainerImage string
+	operatorNamespace         string
 }
 
 // +kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites,verbs=get;list;watch;create;update;patch;delete
@@ -53,10 +67,10 @@ type WebSiteReconciler struct {
 
 func (r *WebSiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
-	log := r.Log.WithValues("website", req.NamespacedName)
+	log := r.log.WithValues("website", req.NamespacedName)
 
 	webSite := &websitev1beta1.WebSite{}
-	if err := r.Get(ctx, req.NamespacedName, webSite); err != nil {
+	if err := r.client.Get(ctx, req.NamespacedName, webSite); err != nil {
 		log.Error(err, "unable to fetch WebSite", "name", req.NamespacedName)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -66,10 +80,15 @@ func (r *WebSiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	isUpdatedAtLeastOnce, revision, err := r.reconcile(ctx, webSite)
+	if errors.Is(err, errRevisionNotReady) {
+		return ctrl.Result{
+			Requeue: true,
+		}, nil
+	}
 	if err != nil {
 		webSite.Status.Ready = corev1.ConditionFalse
 		webSite.Status.Revision = revision
-		errUpdate := r.Status().Update(ctx, webSite)
+		errUpdate := r.client.Status().Update(ctx, webSite)
 		if errUpdate != nil {
 			log.Error(errUpdate, "failed to status update")
 		}
@@ -79,7 +98,7 @@ func (r *WebSiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if isUpdatedAtLeastOnce {
 		webSite.Status.Ready = corev1.ConditionTrue
 		webSite.Status.Revision = revision
-		errUpdate := r.Status().Update(ctx, webSite)
+		errUpdate := r.client.Status().Update(ctx, webSite)
 		if errUpdate != nil {
 			log.Error(errUpdate, "failed to status update")
 			return ctrl.Result{}, err
@@ -89,7 +108,7 @@ func (r *WebSiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 
 func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, string, error) {
-	log := r.Log.WithValues("website", webSite.Name)
+	log := r.log.WithValues("website", webSite.Name)
 
 	isUpdatedAtLeastOnce := false
 
@@ -100,10 +119,10 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	isUpdated, err = r.reconcileRepoChecker(ctx, webSite)
+	isUpdated, err = r.reconcileRepoCheckerDeployment(ctx, webSite)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
-		log.Error(err, "failed to create or update Deployment For RepoChecker")
+		log.Error(err, "failed to reconcile RepoChecker deployment")
 		return isUpdatedAtLeastOnce, "", err
 	}
 
@@ -114,7 +133,7 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	revision, err := r.getRevisionFromRepoChecker(ctx, webSite)
+	revision, err := r.getLatestRevision(ctx, webSite)
 	if err != nil {
 		log.Error(err, "failed to get revision from RepoChecker")
 		return isUpdatedAtLeastOnce, "", err
@@ -138,51 +157,52 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 }
 
 func (r *WebSiteReconciler) reconcileBuildScript(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
-	log := r.Log.WithValues("website", webSite.Name)
+	log := r.log.WithValues("website", webSite.Name)
+
+	if webSite.Spec.BuildScript.RawData == nil {
+		// TODO: implement configmap
+		return false, errors.New("rawData should not be empty")
+	}
 
 	cm := &corev1.ConfigMap{}
-	err := r.Get(ctx, client.ObjectKey{Namespace: webSite.Namespace, Name: webSite.Name}, cm)
-	if err == nil {
-		return false, nil
-	}
-	if !errors.IsNotFound(err) {
-		log.Error(err, "unable to get ConfigMap")
-		return false, err
-	}
-
 	cm.SetNamespace(webSite.Namespace)
-	cm.SetName(webSite.Name)
-	cm.Data = map[string]string{
-		"build.sh": webSite.Spec.BuildScript,
-	}
-	err = ctrl.SetControllerReference(webSite, cm, r.Scheme)
+	cm.SetName(webSite.Name + BuildScriptSuffix)
+
+	op, err := ctrl.CreateOrUpdate(ctx, r.client, cm, func() error {
+		setLabels(&cm.ObjectMeta)
+		cm.Data = map[string]string{
+			"build.sh": *webSite.Spec.BuildScript.RawData,
+		}
+		return ctrl.SetControllerReference(webSite, cm, r.scheme)
+	})
+
 	if err != nil {
+		log.Error(err, "unable to reconcile build script configmap")
 		return false, err
 	}
 
-	err = r.Create(ctx, cm)
-	if err != nil {
-		return false, err
+	if op != controllerutil.OperationResultNone {
+		log.Info("reconcile build script configmap successfully", "op", op)
+		return true, nil
 	}
-
-	return true, nil
+	return false, nil
 }
 
-func (r *WebSiteReconciler) reconcileRepoChecker(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
-	log := r.Log.WithValues("website", webSite.Name)
+func (r *WebSiteReconciler) reconcileRepoCheckerDeployment(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
+	log := r.log.WithValues("website", webSite.Name)
 
 	deployment := &appsv1.Deployment{}
 	deployment.SetNamespace(webSite.Namespace)
 	deployment.SetName(webSite.Name + RepoCheckerSuffix)
 
-	op, err := ctrl.CreateOrUpdate(ctx, r.Client, deployment, func() error {
+	op, err := ctrl.CreateOrUpdate(ctx, r.client, deployment, func() error {
 		setLabels(&deployment.ObjectMeta)
 		deployment.Spec.Replicas = pointer.Int32Ptr(1)
 		deployment.Spec.Selector = &metav1.LabelSelector{}
 		if deployment.Spec.Selector.MatchLabels == nil {
 			deployment.Spec.Selector.MatchLabels = make(map[string]string)
 		}
-		deployment.Spec.Selector.MatchLabels[ManagedByKey] = MyName
+		deployment.Spec.Selector.MatchLabels[ManagedByKey] = OperatorName
 		deployment.Spec.Selector.MatchLabels[AppNameKey] = AppName
 
 		podTemplate, err := r.makePodTemplateForRepoChecker(webSite)
@@ -193,16 +213,15 @@ func (r *WebSiteReconciler) reconcileRepoChecker(ctx context.Context, webSite *w
 			deployment.Spec.Template = *podTemplate
 		}
 
-		return ctrl.SetControllerReference(webSite, deployment, r.Scheme)
+		return ctrl.SetControllerReference(webSite, deployment, r.scheme)
 	})
 
 	if err != nil {
-		log.Error(err, "unable to create-or-update Deployment For RepoChecker")
 		return false, err
 	}
 
 	if op != controllerutil.OperationResultNone {
-		log.Info("reconcile Deployment For RepoChecker successfully", "op", op)
+		log.Info("reconcile RepoChecker deployment successfully", "op", op)
 		return true, nil
 	}
 	return false, nil
@@ -212,17 +231,17 @@ func (r *WebSiteReconciler) makePodTemplateForRepoChecker(webSite *websitev1beta
 	newTemplate := corev1.PodTemplateSpec{}
 
 	newTemplate.Labels = make(map[string]string)
-	newTemplate.Labels[ManagedByKey] = MyName
+	newTemplate.Labels[ManagedByKey] = OperatorName
 	newTemplate.Labels[AppNameKey] = AppName
 	newTemplate.Labels[InstanceKey] = webSite.Name + RepoCheckerSuffix
 
 	container := corev1.Container{
 		Name:  "repo-checker",
-		Image: r.RepoCheckerContainerImage,
+		Image: r.repoCheckerContainerImage,
 		Command: []string{"/repo-checker",
 			fmt.Sprintf("--repo-url=%s", webSite.Spec.RepoURL),
 			fmt.Sprintf("--repo-branch=%s", webSite.Spec.Branch),
-			fmt.Sprintf("--listen-addr=%d", RepoCheckerPort),
+			fmt.Sprintf("--listen-addr=:%d", RepoCheckerPort),
 		},
 		Env: append(makeEnvCommon(webSite),
 			corev1.EnvVar{
@@ -259,10 +278,18 @@ func (r *WebSiteReconciler) makePodTemplateForRepoChecker(webSite *websitev1beta
 }
 
 func makeEnvCommon(webSite *websitev1beta1.WebSite) []corev1.EnvVar {
+	items := strings.Split(webSite.Spec.RepoURL, "/")
+	last := items[len(items)-1]
+	repoName := strings.TrimSuffix(last, ".git")
+
 	env := []corev1.EnvVar{
 		{
 			Name:  "REPO_URL",
 			Value: webSite.Spec.RepoURL,
+		},
+		{
+			Name:  "REPO_NAME",
+			Value: repoName,
 		},
 		{
 			Name:  "REPO_BRANCH",
@@ -273,29 +300,29 @@ func makeEnvCommon(webSite *websitev1beta1.WebSite) []corev1.EnvVar {
 }
 
 func (r *WebSiteReconciler) reconcileRepoCheckerService(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
-	log := r.Log.WithValues("website", webSite.Name)
+	log := r.log.WithValues("website", webSite.Name)
 	service := &corev1.Service{}
 	service.SetNamespace(webSite.Namespace)
 	service.SetName(webSite.Name + RepoCheckerSuffix)
 
-	op, err := ctrl.CreateOrUpdate(ctx, r.Client, service, func() error {
+	op, err := ctrl.CreateOrUpdate(ctx, r.client, service, func() error {
 		setLabels(&service.ObjectMeta)
 		ports := []corev1.ServicePort{
 			{
 				Name:       "repo-checker",
 				Protocol:   corev1.ProtocolTCP,
-				Port:       RepoCheckerPort,
+				Port:       80,
 				TargetPort: intstr.FromInt(RepoCheckerPort),
 			},
 		}
 		service.Spec.Ports = ports
 
 		service.Spec.Selector = make(map[string]string)
-		service.Spec.Selector[ManagedByKey] = MyName
+		service.Spec.Selector[ManagedByKey] = OperatorName
 		service.Spec.Selector[AppNameKey] = AppName
 		service.Spec.Selector[InstanceKey] = webSite.Name + RepoCheckerSuffix
 
-		return ctrl.SetControllerReference(webSite, service, r.Scheme)
+		return ctrl.SetControllerReference(webSite, service, r.scheme)
 	})
 
 	if err != nil {
@@ -310,14 +337,16 @@ func (r *WebSiteReconciler) reconcileRepoCheckerService(ctx context.Context, web
 	return false, nil
 }
 
-func (r *WebSiteReconciler) getRevisionFromRepoChecker(ctx context.Context, webSite *websitev1beta1.WebSite) (string, error) {
-	log := r.Log.WithValues("website", webSite.Name)
+var errRevisionNotReady = errors.New("latest revision not ready")
+
+func (r *WebSiteReconciler) getLatestRevision(ctx context.Context, webSite *websitev1beta1.WebSite) (string, error) {
+	log := r.log.WithValues("website", webSite.Name)
 
 	repoCheckerHost := fmt.Sprintf("%s%s.%s.svc.cluster.local", webSite.Name, RepoCheckerSuffix, webSite.Namespace)
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("http://%s:%d/", repoCheckerHost, RepoCheckerPort),
+		fmt.Sprintf("http://%s/", repoCheckerHost),
 		nil,
 	)
 	if err != nil {
@@ -333,7 +362,7 @@ func (r *WebSiteReconciler) getRevisionFromRepoChecker(ctx context.Context, webS
 
 	if resp.StatusCode == http.StatusNotFound {
 		log.Info("repo checker is not ready")
-		return "", nil
+		return "", errRevisionNotReady
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -350,19 +379,19 @@ func (r *WebSiteReconciler) getRevisionFromRepoChecker(ctx context.Context, webS
 }
 
 func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (bool, error) {
-	log := r.Log.WithValues("website", webSite.Name)
+	log := r.log.WithValues("website", webSite.Name)
 	deployment := &appsv1.Deployment{}
 	deployment.SetNamespace(webSite.Namespace)
 	deployment.SetName(webSite.Name)
 
-	op, err := ctrl.CreateOrUpdate(ctx, r.Client, deployment, func() error {
+	op, err := ctrl.CreateOrUpdate(ctx, r.client, deployment, func() error {
 		setLabels(&deployment.ObjectMeta)
 		deployment.Spec.Replicas = pointer.Int32Ptr(2)
 		deployment.Spec.Selector = &metav1.LabelSelector{}
 		if deployment.Spec.Selector.MatchLabels == nil {
 			deployment.Spec.Selector.MatchLabels = make(map[string]string)
 		}
-		deployment.Spec.Selector.MatchLabels[ManagedByKey] = MyName
+		deployment.Spec.Selector.MatchLabels[ManagedByKey] = OperatorName
 		deployment.Spec.Selector.MatchLabels[AppNameKey] = AppName
 
 		podTemplate, err := r.makeNginxPodTemplate(webSite, revision)
@@ -373,7 +402,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 			deployment.Spec.Template = *podTemplate
 		}
 
-		return ctrl.SetControllerReference(webSite, deployment, r.Scheme)
+		return ctrl.SetControllerReference(webSite, deployment, r.scheme)
 	})
 
 	if err != nil {
@@ -392,7 +421,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite
 	newTemplate := corev1.PodTemplateSpec{}
 
 	newTemplate.Labels = make(map[string]string)
-	newTemplate.Labels[ManagedByKey] = MyName
+	newTemplate.Labels[ManagedByKey] = OperatorName
 	newTemplate.Labels[AppNameKey] = AppName
 	newTemplate.Labels[InstanceKey] = webSite.Name
 
@@ -432,7 +461,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: webSite.Name,
+						Name: webSite.Name + BuildScriptSuffix,
 					},
 					DefaultMode: pointer.Int32Ptr(0755),
 				},
@@ -455,7 +484,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite
 
 	newTemplate.Spec.Containers = append(newTemplate.Spec.Containers, corev1.Container{
 		Name:  "nginx",
-		Image: r.NginxContainerImage,
+		Image: r.nginxContainerImage,
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				MountPath: "/data",
@@ -524,12 +553,12 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite
 }
 
 func (r *WebSiteReconciler) reconcileNginxService(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
-	log := r.Log.WithValues("website", webSite.Name)
+	log := r.log.WithValues("website", webSite.Name)
 	service := &corev1.Service{}
 	service.SetNamespace(webSite.Namespace)
 	service.SetName(webSite.Name)
 
-	op, err := ctrl.CreateOrUpdate(ctx, r.Client, service, func() error {
+	op, err := ctrl.CreateOrUpdate(ctx, r.client, service, func() error {
 		setLabels(&service.ObjectMeta)
 		ports := []corev1.ServicePort{
 			{
@@ -542,11 +571,11 @@ func (r *WebSiteReconciler) reconcileNginxService(ctx context.Context, webSite *
 		service.Spec.Ports = ports
 
 		service.Spec.Selector = make(map[string]string)
-		service.Spec.Selector[ManagedByKey] = MyName
+		service.Spec.Selector[ManagedByKey] = OperatorName
 		service.Spec.Selector[AppNameKey] = AppName
 		service.Spec.Selector[InstanceKey] = webSite.Name
 
-		return ctrl.SetControllerReference(webSite, service, r.Scheme)
+		return ctrl.SetControllerReference(webSite, service, r.scheme)
 	})
 
 	if err != nil {
@@ -565,12 +594,15 @@ func setLabels(om *metav1.ObjectMeta) {
 	if om.Labels == nil {
 		om.Labels = make(map[string]string)
 	}
-	om.Labels[ManagedByKey] = MyName
+	om.Labels[ManagedByKey] = OperatorName
 	om.Labels[AppNameKey] = AppName
 }
 
 func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&websitev1beta1.WebSite{}).
+		Owns(&corev1.Service{}).
+		Owns(&appsv1.Deployment{}).
+		Owns(&corev1.ConfigMap{}).
 		Complete(r)
 }

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	"github.com/zoetrope/website-operator/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,13 +40,14 @@ func subMain() error {
 		return err
 	}
 
-	if err = (&controllers.WebSiteReconciler{
-		Client:                    mgr.GetClient(),
-		Log:                       ctrl.Log.WithName("controllers").WithName("WebSite"),
-		Scheme:                    mgr.GetScheme(),
-		NginxContainerImage:       config.nginxContainerImage,
-		RepoCheckerContainerImage: config.repoCheckerContainerImage,
-	}).SetupWithManager(mgr); err != nil {
+	if err = controllers.NewWebSiteReconciler(
+		mgr.GetClient(),
+		ctrl.Log.WithName("controllers").WithName("WebSite"),
+		mgr.GetScheme(),
+		config.nginxContainerImage,
+		config.repoCheckerContainerImage,
+		os.Getenv("POD_NAMESPACE"),
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "WebSite")
 		return err
 	}
