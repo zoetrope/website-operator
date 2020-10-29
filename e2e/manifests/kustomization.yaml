@@ -3,8 +3,23 @@ kind: Kustomization
 resources:
   - ../../config/default
 #  - honkit.yaml
+generatorOptions:
+  disableNameSuffixHash: true
 secretGenerator:
   - name: honkit-deploy-key
     files:
       - .ssh/id_rsa
       - .ssh/config
+configMapGenerator:
+  - name: build-honkit
+    files:
+      - build-honkit.sh
+  - name: build-mkdocs
+    files:
+      - build-mkdocs.sh
+  - name: elasticsearch
+    files:
+      - elasticsearch.yaml
+  - name: httpproxy
+    files:
+      - httpproxy.yaml

@@ -29,7 +29,7 @@ type WebSiteSpec struct {
 	// +kubebuiler:validation:Required
 	RepoURL string `json:"repoURL"`
 
-	// RepoURL is the branch name of the repository
+	// Branch is the branch name of the repository
 	// +kubebuilder:default=main
 	// +optional
 	Branch string `json:"branch"`

@@ -27,7 +27,8 @@ setup-cluster:
 	$(KUBECTL) wait pod --all -n prometheus --for condition=Ready --timeout 180s
 
 	$(KUBECTL) apply -f https://projectcontour.io/quickstart/contour.yaml
-	$(KUBECTL) wait pod --all -n projectcontour --for condition=Ready
+	$(KUBECTL) wait pod -l app=contour -n projectcontour --for condition=Ready
+	$(KUBECTL) wait pod -l app=envoy -n projectcontour --for condition=Ready
 
 test: launch-kind load-images $(KUBECTL) $(KUSTOMIZE)
 	$(KUBECTL) config use-context kind-$(KIND_CLUSTER_NAME)
@@ -63,6 +64,12 @@ load-nginx-image:
 	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)nginx:1.18.0); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
 		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)nginx:1.18.0; \
+	fi
+
+load-elasticsearch-image:
+	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)elasticsearch:7.9.3); \
+	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
+		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)elasticsearch:7.9.3; \
 	fi
 
 $(KUBECTL):
