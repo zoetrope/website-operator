@@ -14,9 +14,7 @@ RUN set -x \
     && mkdir -p /var/cache/nginx \
     && chown -R www-data:www-data /var/cache/nginx /var/log/nginx \
     && chmod 775 /var/cache/nginx /var/log/nginx \
-    && touch /var/log/nginx/{access.log,error.log,nginx.pid} \
-    && ln -sf  /dev/stdout /var/log/nginx/access.log \
-    && ln -sf /dev/stderr /var/log/nginx/error.log 
+    && touch /var/log/nginx/nginx.pid
 
 EXPOSE 8080
 USER www-data:www-data
