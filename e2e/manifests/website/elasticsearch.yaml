@@ -3,21 +3,21 @@ kind: StatefulSet
 metadata:
   labels:
     app.kubernetes.io/name: elasticsearch
-    app.kubernetes.io/instance: {{.Name}}-es
-  name: {{.Name}}-es
-  namespace: {{.Namespace}}
+    app.kubernetes.io/instance: honkit-sample
+  name: honkit-sample-es
+  namespace: default
 spec:
   replicas: 1
-  serviceName: {{.Name}}-es
+  serviceName: honkit-sample-es
   selector:
     matchLabels:
       app.kubernetes.io/name: elasticsearch
-      app.kubernetes.io/instance: {{.Name}}-es
+      app.kubernetes.io/instance: honkit-sample
   template:
     metadata:
       labels:
         app.kubernetes.io/name: elasticsearch
-        app.kubernetes.io/instance: {{.Name}}-es
+        app.kubernetes.io/instance: honkit-sample
     spec:
       containers:
         - env:
@@ -25,12 +25,6 @@ spec:
               value: -Xms2048M -Xmx2048M
             - name: discovery.type
               value: single-node
-#            - name: http.cors.enabled
-#              value: "true"
-#            - name: http.cors.allow-origin
-#              value: "*"
-#            - name: http.cors.allow-headers
-#              value: "X-Requested-With, Content-Type, Content-Length, x-amz-security-token, X-Amz-Date, Authorization"
           image: ghcr.io/zoetrope/elasticsearch:7.9.3
           imagePullPolicy: IfNotPresent
           name: elasticsearch
@@ -48,3 +42,19 @@ spec:
             requests:
               cpu: "2"
               memory: 4Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: elasticsearch
+    app.kubernetes.io/instance: honkit-sample
+  name: honkit-sample-es
+  namespace: default
+spec:
+  ports:
+    - port: 9200
+      name: http
+  selector:
+    app.kubernetes.io/name: elasticsearch
+    app.kubernetes.io/instance: honkit-sample

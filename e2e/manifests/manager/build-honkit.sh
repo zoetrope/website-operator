@@ -1,14 +1,13 @@
 #!/bin/bash -ex
 cd $HOME
-
 rm -rf $REPO_NAME
 git clone $REPO_URL
-
 cd $REPO_NAME
 git checkout $REVISION
+
 npm install
 npm run build
 
-rm -rf /data/
+rm -rf /data/*
 cp -r _book/* /data/
 cp -r assets/* /data/assets/

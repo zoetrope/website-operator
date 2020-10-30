@@ -51,8 +51,8 @@ cp -r _book/* /data/
 			Namespace: "default",
 		},
 		Spec: websitev1beta1.WebSiteSpec{
-			PreBuildResources: nil,
-			BuildImage:        "ghcr.io/zoetrope/node:12.19.0",
+			ExtraResources: nil,
+			BuildImage:     "ghcr.io/zoetrope/node:12.19.0",
 			BuildScript: websitev1beta1.DataSource{
 				RawData: &buildScript,
 			},

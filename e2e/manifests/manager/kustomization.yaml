@@ -1,25 +1,19 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: website-operator-system
 resources:
-  - ../../config/default
-#  - honkit.yaml
+  - ../../../config/default
 generatorOptions:
   disableNameSuffixHash: true
-secretGenerator:
-  - name: honkit-deploy-key
-    files:
-      - .ssh/id_rsa
-      - .ssh/config
 configMapGenerator:
   - name: build-honkit
     files:
       - build-honkit.sh
+      - build-honkit-es.sh
   - name: build-mkdocs
     files:
       - build-mkdocs.sh
-  - name: elasticsearch
-    files:
-      - elasticsearch.yaml
   - name: httpproxy
     files:
-      - httpproxy.yaml
+      - httpproxy.tmpl
+      - httpproxy-es.tmpl

@@ -20,23 +20,25 @@ shutdown-kind: kind
 
 setup-cluster:
 	$(KUBECTL) apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml
-	$(KUBECTL) wait pod --all -n cert-manager --for condition=Ready
+	$(KUBECTL) wait pod --all -n cert-manager --for condition=Ready --timeout 180s
 
-	$(KUBECTL) create ns prometheus
-	helm install prometheus stable/prometheus-operator --namespace=prometheus --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+	#$(KUBECTL) create ns prometheus
+	#helm install prometheus stable/prometheus-operator --namespace=prometheus --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
 	$(KUBECTL) wait pod --all -n prometheus --for condition=Ready --timeout 180s
 
 	$(KUBECTL) apply -f https://projectcontour.io/quickstart/contour.yaml
-	$(KUBECTL) wait pod -l app=contour -n projectcontour --for condition=Ready
-	$(KUBECTL) wait pod -l app=envoy -n projectcontour --for condition=Ready
+	$(KUBECTL) wait pod -l app=contour -n projectcontour --for condition=Ready --timeout 180s
+	$(KUBECTL) wait pod -l app=envoy -n projectcontour --for condition=Ready --timeout 180s
 
-test: launch-kind load-images $(KUBECTL) $(KUSTOMIZE)
+#test: launch-kind load-images setup-cluster $(KUBECTL) $(KUSTOMIZE)
+test: load-operator-images
 	$(KUBECTL) config use-context kind-$(KIND_CLUSTER_NAME)
-	$(KUSTOMIZE) build --load_restrictor='none' ./manifests | $(KUBECTL) apply -f -
+	$(KUSTOMIZE) build ./manifests/manager | $(KUBECTL) apply -f -
+	$(KUSTOMIZE) build ./manifests/website | $(KUBECTL) apply -f -
 	#env E2ETEST=1 go test -count=1 -v . -args -ginkgo.progress -ginkgo.v
 
 .PHONY: load-images
-load-images: load-operator-images load-checker-image load-nginx-image load-node-image
+load-images: load-operator-images load-checker-image load-nginx-image load-node-image load-elasticsearch-image
 
 .PHONY: load-operator-images
 load-operator-images:

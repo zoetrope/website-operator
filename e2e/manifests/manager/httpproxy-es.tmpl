@@ -1,25 +1,21 @@
 apiVersion: projectcontour.io/v1
 kind: HTTPProxy
 metadata:
-  name: honkit-sample
-  namespace: default
+  name: {{.ResourceName}}
+  namespace: {{.ResourceNamespace}}
 spec:
   virtualhost:
-    fqdn: website-operator.example.com
+    fqdn: {{.ResourceName}}.{{.ResourceNamespace}}.example.com
   routes:
     - conditions:
-        - prefix: /honkit
+        - prefix: /
       services:
-        - name: honkit-sample
+        - name: {{.ResourceName}}
           port: 8080
-      pathRewritePolicy:
-        replacePrefix:
-          - prefix: /honkit
-            replacement: /
     - conditions:
         - prefix: /es
       services:
-        - name: honkit-sample-es
+        - name: {{.ResourceName}}-es
           port: 9200
       pathRewritePolicy:
         replacePrefix:

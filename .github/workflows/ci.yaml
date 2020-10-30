@@ -26,10 +26,10 @@ jobs:
       - run: make setup
         if: steps.cache-tools.outputs.cache-hit != 'true'
       - run: |
-          cat > ./e2e/manifests/.ssh/id_rsa <<EOF
+          cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
           ${{ secrets.DEPLOY_KEY }}
           EOF
-      - run: chmod 0600 ./e2e/manifests/.ssh/id_rsa
+      - run: chmod 0600 ./e2e/manifests/website/.ssh/id_rsa
       - run: make test
   deploy:
     name: Deploy the latest image

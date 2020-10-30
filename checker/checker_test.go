@@ -48,7 +48,7 @@ func TestPrivateRepository(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Setenv("GIT_SSH_COMMAND", "ssh -F "+filepath.Join(wd, "..", "e2e", "manifests", ".ssh", "config")+" -i "+filepath.Join(wd, "..", "e2e", "manifests", ".ssh", "id_rsa"))
+	err = os.Setenv("GIT_SSH_COMMAND", "ssh -F "+filepath.Join(wd, "..", "e2e", "manifests", "website", ".ssh", "config")+" -i "+filepath.Join(wd, "..", "e2e", "manifests", "website", ".ssh", "id_rsa"))
 	if err != nil {
 		t.Fatal(err)
 	}

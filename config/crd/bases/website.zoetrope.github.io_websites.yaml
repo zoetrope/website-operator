@@ -41,7 +41,7 @@ spec:
             properties:
               branch:
                 default: main
-                description: RepoURL is the branch name of the repository
+                description: Branch is the branch name of the repository
                 type: string
               buildImage:
                 description: BuildImage is the container image name that will be used to build the website
@@ -49,9 +49,19 @@ spec:
               buildScript:
                 description: BuildScript is the script to build the website
                 properties:
-                  configMapName:
+                  configMap:
                     description: ConfigMapName is the name of the ConfigMap
-                    type: string
+                    properties:
+                      key:
+                        description: Key is the name of a key
+                        type: string
+                      name:
+                        description: Name is the name of a configmap resource
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
                   rawData:
                     description: RawData is raw data
                     type: string
@@ -59,27 +69,24 @@ spec:
               deployKeySecretName:
                 description: DeployKeySecretName is the name of the secret resource that contains the deploy key to access the private repository
                 type: string
-              postBuildResources:
-                description: PostBuildResources are resources that will be applied after the build step
+              extraResources:
+                description: ExtraResources are resources that will be applied after the build step
                 items:
                   description: DataSource represents the source of data. Only one of its members may be specified.
                   properties:
-                    configMapName:
+                    configMap:
                       description: ConfigMapName is the name of the ConfigMap
-                      type: string
-                    rawData:
-                      description: RawData is raw data
-                      type: string
-                  type: object
-                type: array
-              preBuildResources:
-                description: PreBuildResources are resources that will be applied before the build step
-                items:
-                  description: DataSource represents the source of data. Only one of its members may be specified.
-                  properties:
-                    configMapName:
-                      description: ConfigMapName is the name of the ConfigMap
-                      type: string
+                      properties:
+                        key:
+                          description: Key is the name of a key
+                          type: string
+                        name:
+                          description: Name is the name of a configmap resource
+                          type: string
+                      required:
+                      - key
+                      - name
+                      type: object
                     rawData:
                       description: RawData is raw data
                       type: string

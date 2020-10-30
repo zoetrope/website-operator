@@ -159,9 +159,22 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 func (r *WebSiteReconciler) reconcileBuildScript(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
 	log := r.log.WithValues("website", webSite.Name)
 
-	if webSite.Spec.BuildScript.RawData == nil {
-		// TODO: implement configmap
-		return false, errors.New("rawData should not be empty")
+	buildScript := ""
+	if webSite.Spec.BuildScript.RawData != nil {
+		buildScript = *webSite.Spec.BuildScript.RawData
+	} else if webSite.Spec.BuildScript.ConfigMap != nil {
+		buildScriptConfigMap := &corev1.ConfigMap{}
+		err := r.client.Get(ctx, client.ObjectKey{Namespace: r.operatorNamespace, Name: (*webSite.Spec.BuildScript.ConfigMap).Name}, buildScriptConfigMap)
+		if err != nil {
+			return false, err
+		}
+		var ok bool
+		buildScript, ok = buildScriptConfigMap.Data[(*webSite.Spec.BuildScript.ConfigMap).Key]
+		if !ok {
+			return false, fmt.Errorf("ConfigMap %s does not have %s", (*webSite.Spec.BuildScript.ConfigMap).Name, (*webSite.Spec.BuildScript.ConfigMap).Key)
+		}
+	} else {
+		return false, errors.New("buildScript should not be empty")
 	}
 
 	cm := &corev1.ConfigMap{}
@@ -171,7 +184,7 @@ func (r *WebSiteReconciler) reconcileBuildScript(ctx context.Context, webSite *w
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, cm, func() error {
 		setLabels(&cm.ObjectMeta)
 		cm.Data = map[string]string{
-			"build.sh": *webSite.Spec.BuildScript.RawData,
+			"build.sh": buildScript,
 		}
 		return ctrl.SetControllerReference(webSite, cm, r.scheme)
 	})

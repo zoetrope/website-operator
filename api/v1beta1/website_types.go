@@ -13,10 +13,6 @@ type WebSiteSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// PreBuildResources are resources that will be applied before the build step
-	// +optional
-	PreBuildResources []DataSource `json:"preBuildResources,omitempty"`
-
 	// BuildImage is the container image name that will be used to build the website
 	// +kubebuiler:validation:Required
 	BuildImage string `json:"buildImage"`
@@ -38,9 +34,9 @@ type WebSiteSpec struct {
 	// +optional
 	DeployKeySecretName *string `json:"deployKeySecretName,omitempty"`
 
-	// PostBuildResources are resources that will be applied after the build step
+	// ExtraResources are resources that will be applied after the build step
 	// +optional
-	PostBuildResources []DataSource `json:"postBuildResources,omitempty"`
+	ExtraResources []DataSource `json:"extraResources,omitempty"`
 }
 
 // DataSource represents the source of data.
@@ -48,11 +44,21 @@ type WebSiteSpec struct {
 type DataSource struct {
 	// ConfigMapName is the name of the ConfigMap
 	// +optional
-	ConfigMapName *string `json:"configMapName,omitempty"`
+	ConfigMap *ConfigMapSource `json:"configMap,omitempty"`
 
 	// RawData is raw data
 	// +optional
 	RawData *string `json:"rawData,omitempty"`
+}
+
+type ConfigMapSource struct {
+	// Name is the name of a configmap resource
+	// +kubebuiler:validation:Required
+	Name string `json:"name"`
+
+	// Key is the name of a key
+	// +kubebuiler:validation:Required
+	Key string `json:"key"`
 }
 
 // WebSiteStatus defines the observed state of WebSite
