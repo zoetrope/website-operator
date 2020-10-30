@@ -284,6 +284,14 @@ func makeEnvCommon(webSite *websitev1beta1.WebSite) []corev1.EnvVar {
 
 	env := []corev1.EnvVar{
 		{
+			Name:  "RESOURCE_NAMESPACE",
+			Value: webSite.Namespace,
+		},
+		{
+			Name:  "RESOURCE_NAME",
+			Value: webSite.Name,
+		},
+		{
 			Name:  "REPO_URL",
 			Value: webSite.Spec.RepoURL,
 		},
@@ -538,7 +546,12 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite
 			},
 			corev1.EnvVar{
 				Name:  "REVISION",
-				Value: revision},
+				Value: revision,
+			},
+			corev1.EnvVar{
+				Name:  "OUTPUT",
+				Value: "/data",
+			},
 		),
 	}
 
