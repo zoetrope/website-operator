@@ -9,16 +9,14 @@ GO_FILES := $(shell find .. -path ../vendor -prune -o -path ../e2e -prune -o -na
 launch-kind: kind
 	if [ ! "$(shell kind get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
 		kind create cluster --name=$(KIND_CLUSTER_NAME) --config kind-config.yaml --image kindest/node:v$(KUBERNETES_VERSION) --wait 180s; \
-		echo "127.0.0.1\twebsite-operator.example.com\n" | sudo tee -a /etc/hosts > /dev/null; \
 	fi
 
 shutdown-kind: kind
 	if [ "$(shell kind get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
 		kind delete cluster --name=$(KIND_CLUSTER_NAME) || true; \
-		sudo sed -i -e '/website-operator.example.com/d' /etc/hosts; \
 	fi
 
-setup-cluster:
+setup-cluster: $(KUBECTL)
 #	$(KUBECTL) apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml
 #	$(KUBECTL) wait pod --all -n cert-manager --for condition=Ready --timeout 180s
 
@@ -30,12 +28,12 @@ setup-cluster:
 	$(KUBECTL) wait pod -l app=contour -n projectcontour --for condition=Ready --timeout 180s
 	$(KUBECTL) wait pod -l app=envoy -n projectcontour --for condition=Ready --timeout 180s
 
-#test: launch-kind load-images setup-cluster $(KUBECTL) $(KUSTOMIZE)
-test: load-operator-images
+test: launch-kind load-images setup-cluster $(KUBECTL) $(KUSTOMIZE)
 	$(KUBECTL) config use-context kind-$(KIND_CLUSTER_NAME)
 	$(KUSTOMIZE) build ./manifests/manager | $(KUBECTL) apply -f -
+	$(KUBECTL) wait pod -l control-plane=controller-manager -n website-operator-system --for condition=Ready --timeout 180s
 	$(KUSTOMIZE) build ./manifests/website | $(KUBECTL) apply -f -
-	#env E2ETEST=1 go test -count=1 -v . -args -ginkgo.progress -ginkgo.v
+	env E2E_TEST=1 go test -count=1 -v . -args -ginkgo.progress -ginkgo.v
 
 .PHONY: load-images
 load-images: load-operator-images load-checker-image

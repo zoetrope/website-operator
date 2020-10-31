@@ -31,10 +31,25 @@ jobs:
           EOF
       - run: chmod 0600 ./e2e/manifests/website/.ssh/id_rsa
       - run: make test
+  e2e:
+    name: End-to-end Test
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.go-version }}
+      - run: |
+          cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
+          ${{ secrets.DEPLOY_KEY }}
+          EOF
+      - run: chmod 0600 ./e2e/manifests/website/.ssh/id_rsa
+      - run: make test
+        working-directory: e2e
   deploy:
     name: Deploy the latest image
     runs-on: ubuntu-20.04
-    needs: [test]
+    needs: [test, e2e]
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v2
