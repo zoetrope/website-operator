@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: website-operator-system
 resources:
   - ../../../config/default
+  - rbac.yaml
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:

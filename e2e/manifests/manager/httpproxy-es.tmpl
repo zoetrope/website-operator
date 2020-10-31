@@ -2,7 +2,6 @@ apiVersion: projectcontour.io/v1
 kind: HTTPProxy
 metadata:
   name: {{.ResourceName}}
-  namespace: {{.ResourceNamespace}}
 spec:
   virtualhost:
     fqdn: {{.ResourceName}}.{{.ResourceNamespace}}.example.com
@@ -15,7 +14,7 @@ spec:
     - conditions:
         - prefix: /es
       services:
-        - name: {{.ResourceName}}-es
+        - name: honkit-es
           port: 9200
       pathRewritePolicy:
         replacePrefix:

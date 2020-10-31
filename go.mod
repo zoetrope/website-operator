@@ -14,4 +14,5 @@ require (
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
 	sigs.k8s.io/controller-runtime v0.6.3
 	sigs.k8s.io/controller-tools v0.4.0 // indirect
+	sigs.k8s.io/yaml v1.2.0
 )

@@ -3,21 +3,21 @@ kind: StatefulSet
 metadata:
   labels:
     app.kubernetes.io/name: elasticsearch
-    app.kubernetes.io/instance: honkit-sample
-  name: honkit-sample-es
+    app.kubernetes.io/instance: honkit-es
+  name: honkit-es
   namespace: default
 spec:
   replicas: 1
-  serviceName: honkit-sample-es
+  serviceName: honkit-es
   selector:
     matchLabels:
       app.kubernetes.io/name: elasticsearch
-      app.kubernetes.io/instance: honkit-sample
+      app.kubernetes.io/instance: honkit-es
   template:
     metadata:
       labels:
         app.kubernetes.io/name: elasticsearch
-        app.kubernetes.io/instance: honkit-sample
+        app.kubernetes.io/instance: honkit-es
     spec:
       containers:
         - env:
@@ -48,8 +48,8 @@ kind: Service
 metadata:
   labels:
     app.kubernetes.io/name: elasticsearch
-    app.kubernetes.io/instance: honkit-sample
-  name: honkit-sample-es
+    app.kubernetes.io/instance: honkit-es
+  name: honkit-es
   namespace: default
 spec:
   ports:
@@ -57,4 +57,4 @@ spec:
       name: http
   selector:
     app.kubernetes.io/name: elasticsearch
-    app.kubernetes.io/instance: honkit-sample
+    app.kubernetes.io/instance: honkit-es

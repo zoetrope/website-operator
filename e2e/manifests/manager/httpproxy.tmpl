@@ -2,7 +2,6 @@ apiVersion: projectcontour.io/v1
 kind: HTTPProxy
 metadata:
   name: {{.ResourceName}}
-  namespace: {{.ResourceNamespace}}
 spec:
   virtualhost:
     fqdn: {{.ResourceName}}.{{.ResourceNamespace}}.example.com

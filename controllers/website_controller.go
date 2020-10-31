@@ -1,12 +1,17 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"text/template"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cybozu-go/well"
 	"github.com/go-logr/logr"
@@ -150,6 +155,13 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
 		log.Error(err, "failed to create or update Service For Nginx")
+		return isUpdatedAtLeastOnce, "", err
+	}
+
+	isUpdated, err = r.reconcileExtraResources(ctx, webSite)
+	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
+	if err != nil {
+		log.Error(err, "failed to create extraResources")
 		return isUpdatedAtLeastOnce, "", err
 	}
 
@@ -614,6 +626,72 @@ func (r *WebSiteReconciler) reconcileNginxService(ctx context.Context, webSite *
 		return true, nil
 	}
 	return false, nil
+}
+
+func (r *WebSiteReconciler) reconcileExtraResources(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
+	log := r.log.WithValues("website", webSite.Name)
+	isUpdated := false
+
+	for _, res := range webSite.Spec.ExtraResources {
+		obj, err := r.extraResource(ctx, webSite, &res)
+		if err != nil {
+			return false, err
+		}
+		op, err := ctrl.CreateOrUpdate(ctx, r.client, obj, func() error {
+			return ctrl.SetControllerReference(webSite, obj, r.scheme)
+		})
+		if err != nil {
+			return false, err
+		}
+		if op != controllerutil.OperationResultNone {
+			log.Info("reconcile extraResource successfully", "op", op)
+			isUpdated = true
+		}
+	}
+
+	return isUpdated, nil
+}
+
+func (r *WebSiteReconciler) extraResource(ctx context.Context, webSite *websitev1beta1.WebSite, res *websitev1beta1.DataSource) (*unstructured.Unstructured, error) {
+	resourceTemplate := ""
+	if res.RawData != nil {
+		resourceTemplate = *res.RawData
+	} else if res.ConfigMap != nil {
+		resourceTemplateConfigMap := &corev1.ConfigMap{}
+		err := r.client.Get(ctx, client.ObjectKey{Namespace: r.operatorNamespace, Name: (*res.ConfigMap).Name}, resourceTemplateConfigMap)
+		if err != nil {
+			return nil, err
+		}
+		var ok bool
+		resourceTemplate, ok = resourceTemplateConfigMap.Data[(*res.ConfigMap).Key]
+		if !ok {
+			return nil, fmt.Errorf("ConfigMap %s does not have %s", (*res.ConfigMap).Name, (*res.ConfigMap).Key)
+		}
+	} else {
+		return nil, errors.New("extraResource should not be empty")
+	}
+	t, err := template.New("extra").Parse(resourceTemplate)
+	if err != nil {
+		return nil, err
+	}
+	buf := bytes.NewBuffer(nil)
+	err = t.Execute(buf, struct {
+		ResourceName      string
+		ResourceNamespace string
+	}{
+		ResourceName:      webSite.Name,
+		ResourceNamespace: webSite.Namespace,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var obj unstructured.Unstructured
+	err = yaml.Unmarshal(buf.Bytes(), &obj)
+	if err != nil {
+		return nil, err
+	}
+	obj.SetNamespace(webSite.Namespace)
+	return &obj, nil
 }
 
 func setLabels(om *metav1.ObjectMeta) {

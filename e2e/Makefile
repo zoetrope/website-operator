@@ -19,12 +19,12 @@ shutdown-kind: kind
 	fi
 
 setup-cluster:
-	$(KUBECTL) apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml
-	$(KUBECTL) wait pod --all -n cert-manager --for condition=Ready --timeout 180s
+#	$(KUBECTL) apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml
+#	$(KUBECTL) wait pod --all -n cert-manager --for condition=Ready --timeout 180s
 
 	#$(KUBECTL) create ns prometheus
 	#helm install prometheus stable/prometheus-operator --namespace=prometheus --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
-	$(KUBECTL) wait pod --all -n prometheus --for condition=Ready --timeout 180s
+	#$(KUBECTL) wait pod --all -n prometheus --for condition=Ready --timeout 180s
 
 	$(KUBECTL) apply -f https://projectcontour.io/quickstart/contour.yaml
 	$(KUBECTL) wait pod -l app=contour -n projectcontour --for condition=Ready --timeout 180s
@@ -38,7 +38,7 @@ test: load-operator-images
 	#env E2ETEST=1 go test -count=1 -v . -args -ginkgo.progress -ginkgo.v
 
 .PHONY: load-images
-load-images: load-operator-images load-checker-image load-nginx-image load-node-image load-elasticsearch-image
+load-images: load-operator-images load-checker-image
 
 .PHONY: load-operator-images
 load-operator-images:
@@ -54,24 +54,6 @@ load-checker-image:
 	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)repo-checker:dev); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
 		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)repo-checker:dev; \
-	fi
-
-load-node-image:
-	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)node:12.19.0); \
-	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
-		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)node:12.19.0; \
-	fi
-
-load-nginx-image:
-	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)nginx:1.18.0); \
-	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
-		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)nginx:1.18.0; \
-	fi
-
-load-elasticsearch-image:
-	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)elasticsearch:7.9.3); \
-	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
-		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)elasticsearch:7.9.3; \
 	fi
 
 $(KUBECTL):
