@@ -5,13 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
 	"text/template"
+	"time"
 
-	"github.com/cybozu-go/well"
 	"github.com/go-logr/logr"
+	"github.com/zoetrope/website-operator"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -24,6 +23,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 	"sigs.k8s.io/yaml"
 )
 
@@ -137,7 +139,7 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	revision, err := r.getLatestRevision(ctx, webSite)
+	revision, err := getLatestRevision(ctx, webSite)
 	if err != nil {
 		log.Error(err, "failed to get revision from RepoChecker")
 		return isUpdatedAtLeastOnce, "", err
@@ -370,45 +372,6 @@ func (r *WebSiteReconciler) reconcileRepoCheckerService(ctx context.Context, web
 }
 
 var errRevisionNotReady = errors.New("latest revision not ready")
-
-func (r *WebSiteReconciler) getLatestRevision(ctx context.Context, webSite *websitev1beta1.WebSite) (string, error) {
-	log := r.log.WithValues("website", webSite.Name)
-
-	repoCheckerHost := fmt.Sprintf("%s%s.%s.svc.cluster.local", webSite.Name, RepoCheckerSuffix, webSite.Namespace)
-	req, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("http://%s/", repoCheckerHost),
-		nil,
-	)
-	if err != nil {
-		return "", err
-	}
-
-	cli := &well.HTTPClient{Client: &http.Client{}}
-	resp, err := cli.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		log.Info("repo checker is not ready")
-		return "", errRevisionNotReady
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to repo check: %s", resp.Status)
-	}
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	log.Info("Retrieved Revision", "revision", b)
-	return string(b), nil
-}
 
 func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (bool, error) {
 	log := r.log.WithValues("website", webSite.Name)
@@ -714,11 +677,33 @@ func setLabels(om *metav1.ObjectMeta) {
 	om.Labels[AppNameKey] = AppName
 }
 
+func selectReadyWebSite(obj runtime.Object) []string {
+	site := obj.(*websitev1beta1.WebSite)
+	return []string{string(site.Status.Ready)}
+}
+
 func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	ctx := context.Background()
+	err := mgr.GetFieldIndexer().IndexField(ctx, &websitev1beta1.WebSite{}, website.WebSiteIndexField, selectReadyWebSite)
+	if err != nil {
+		return err
+	}
+
+	ch := make(chan event.GenericEvent)
+	watcher := newRevisionWatcher(mgr.GetClient(), mgr.GetLogger().WithName("RevisionWatcher"), ch, 1*time.Minute)
+	err = mgr.Add(watcher)
+	if err != nil {
+		return err
+	}
+	src := source.Channel{
+		Source: ch,
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&websitev1beta1.WebSite{}).
 		Owns(&corev1.Service{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.ConfigMap{}).
+		Watches(&src, &handler.EnqueueRequestForObject{}).
 		Complete(r)
 }
