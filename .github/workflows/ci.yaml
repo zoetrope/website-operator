@@ -45,7 +45,13 @@ jobs:
           EOF
       - run: chmod 0600 ./e2e/manifests/website/.ssh/id_rsa
       - run: make test
+        id: run_e2e_test
         working-directory: e2e
+      - if: failure() && steps.run_e2e_test.outcome == 'failure'
+        run: |
+          ./e2e/bin/kubectl get pod
+          ./e2e/bin/kubectl describe pod
+
   deploy:
     name: Deploy the latest image
     runs-on: ubuntu-20.04

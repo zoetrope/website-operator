@@ -17,7 +17,7 @@ func TestE2E(t *testing.T) {
 		t.Skip("Run under e2e/")
 	}
 	RegisterFailHandler(Fail)
-	SetDefaultEventuallyTimeout(5 * time.Minute)
+	SetDefaultEventuallyTimeout(20 * time.Second)
 	SetDefaultEventuallyPollingInterval(1 * time.Second)
 	RunSpecs(t, "E2E Suite")
 }
@@ -53,4 +53,5 @@ func getResource(ns, resource, name, label string, obj interface{}) error {
 
 var _ = Describe("website-operator", func() {
 	Context("bootstrap", testBootstrap)
+	Context("update", testUpdate)
 })

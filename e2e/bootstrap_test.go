@@ -3,6 +3,9 @@ package e2e
 import (
 	"errors"
 	"net/http"
+	"time"
+
+	appsv1 "k8s.io/api/apps/v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,10 +25,19 @@ func testBootstrap() {
 				return errors.New("honkit-sample should be ready")
 			}
 			return nil
-		}).Should(Succeed())
+		}, 1*time.Minute).Should(Succeed())
 
-		_, err := kubectl(nil, "wait", "pod", "-l", "app.kubernetes.io/instance=honkit-sample", "--for", "condition=Ready", "--timeout=120s")
-		Expect(err).ShouldNot(HaveOccurred())
+		var deployment appsv1.Deployment
+		Eventually(func() error {
+			err := getResource("default", "deployment", "honkit-sample", "", &deployment)
+			if err != nil {
+				return err
+			}
+			if deployment.Status.AvailableReplicas != 2 {
+				return errors.New("should be ready")
+			}
+			return nil
+		}, 3*time.Minute).Should(Succeed())
 
 		req, err := http.NewRequest(http.MethodGet, "http://127.0.0.1", nil)
 		Expect(err).ShouldNot(HaveOccurred())
