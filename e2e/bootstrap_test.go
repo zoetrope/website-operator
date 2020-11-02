@@ -5,11 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	appsv1 "k8s.io/api/apps/v1"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
