@@ -51,7 +51,6 @@ jobs:
         run: |
           ./e2e/bin/kubectl get pod
           ./e2e/bin/kubectl describe pod
-
   deploy:
     name: Deploy the latest image
     runs-on: ubuntu-20.04

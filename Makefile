@@ -8,9 +8,11 @@ export KUBEBUILDER_ASSETS
 
 CONTROLLER_GEN := $(PWD)/bin/controller-gen
 KUBEBUILDER := $(PWD)/bin/kubebuilder
+KUSTOMIZE := $(PWD)/bin/kustomize
 
 WEBSITE_OPERATOR = build/website-operator
 REPO_CHECKER = build/repo-checker
+INSTALL_YAML = build/install.yaml
 GO_FILES := $(shell find . -type f -name '*.go')
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
@@ -32,6 +34,9 @@ $(WEBSITE_OPERATOR): $(GO_FILES) generate
 $(REPO_CHECKER): $(GO_FILES)
 	mkdir -p build
 	go build -o $@ ./cmd/repo-checker
+
+$(INSTALL_YAML): $(KUSTOMIZE)
+	$(KUSTOMIZE) build ./config/default > $@
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: $(CONTROLLER_GEN)
@@ -82,3 +87,7 @@ $(CONTROLLER_GEN):
 	mkdir -p bin
 	env GOBIN=$(PWD)/bin GOFLAGS= go install sigs.k8s.io/controller-tools/cmd/controller-gen
 
+$(KUSTOMIZE):
+	mkdir -p bin
+	curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VERSION)/kustomize_v$(KUSTOMIZE_VERSION)_linux_amd64.tar.gz | tar xzf - > kustomize
+	mv kustomize $(KUSTOMIZE)
