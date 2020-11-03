@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: website-operator-system
+spec:
+  template:
+    spec:
+      containers:
+        - command:
+            - /website-operator
+          args:
+            - --enable-leader-election
+          image: ghcr.io/zoetrope/website-operator:dev
+          name: manager

@@ -9,5 +9,5 @@ pip3 install -r requirements.txt
 export PATH=$PATH:$HOME/.local/bin
 mkdocs build
 
-rm -rf /data/*
-cp -r site/* /data/
+rm -rf $OUTPUT/*
+cp -r site/* $OUTPUT/

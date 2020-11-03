@@ -8,6 +8,6 @@ git checkout $REVISION
 npm install
 npm run build
 
-rm -rf /data/*
-cp -r _book/* /data/
-cp -r assets/* /data/assets/
+rm -rf $OUTPUT/*
+cp -r _book/* $OUTPUT/
+cp -r assets/* $OUTPUT/assets/

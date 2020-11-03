@@ -8,5 +8,5 @@ git checkout $REVISION
 npm install
 npm run build
 
-rm -rf /data/*
-cp -r public/* /data/
+rm -rf $OUTPUT/*
+cp -r public/* $OUTPUT/

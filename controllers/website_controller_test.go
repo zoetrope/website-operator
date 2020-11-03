@@ -85,7 +85,7 @@ git clone $REPO_URL
 cd $REPO_NAME
 git checkout $REVISION
 npm install && npm run build
-cp -r _book/* /data/
+cp -r _book/* $OUTPUT/
 `
 	site := &websitev1beta1.WebSite{
 		TypeMeta: metav1.TypeMeta{

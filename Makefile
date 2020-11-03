@@ -36,7 +36,8 @@ $(REPO_CHECKER): $(GO_FILES)
 	go build -o $@ ./cmd/repo-checker
 
 $(INSTALL_YAML): $(KUSTOMIZE)
-	$(KUSTOMIZE) build ./config/default > $@
+	mkdir -p build
+	$(KUSTOMIZE) build ./config/release > $@
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: $(CONTROLLER_GEN)
@@ -91,3 +92,10 @@ $(KUSTOMIZE):
 	mkdir -p bin
 	curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VERSION)/kustomize_v$(KUSTOMIZE_VERSION)_linux_amd64.tar.gz | tar xzf - > kustomize
 	mv kustomize $(KUSTOMIZE)
+
+.PHONY: clean
+clean:
+	rm -rf ./bin
+	rm -rf ./build
+	rm -f ./docker/website-operator/website-operator
+	rm -f ./docker/repo-checker/repo-checker

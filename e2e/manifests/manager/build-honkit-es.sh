@@ -15,6 +15,6 @@ curl -X DELETE http://honkit-es:9200/${REPO_NAME}-${REVISION}
 curl -X PUT http://honkit-es:9200/${REPO_NAME}-${REVISION} -H 'Content-Type: application/json' -d @mappings.json
 curl -X POST http://honkit-es:9200/${REPO_NAME}-${REVISION}/_bulk -H 'Content-Type: application/json' --data-binary @_book/search_index.json
 
-rm -rf /data/*
-cp -r _book/* /data/
-cp -r assets/* /data/assets/
+rm -rf $OUTPUT/*
+cp -r _book/* $OUTPUT/
+cp -r assets/* $OUTPUT/assets/
