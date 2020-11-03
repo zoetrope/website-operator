@@ -1,15 +1,15 @@
 apiVersion: website.zoetrope.github.io/v1beta1
 kind: WebSite
 metadata:
-  name: honkit-sample
+  name: gatsby-sample
   namespace: default
 spec:
   buildImage: ghcr.io/zoetrope/node:12.19.0
   buildScript:
     configMap:
       name: build-scripts
-      key: build-honkit.sh
-  repoURL: https://github.com/zoetrope/honkit-sample.git
+      key: build-gatsby.sh
+  repoURL: https://github.com/zoetrope/gatsby-sample.git
   branch: main
   extraResources:
     - configMap:

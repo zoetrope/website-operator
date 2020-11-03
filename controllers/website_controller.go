@@ -272,12 +272,14 @@ func (r *WebSiteReconciler) makePodTemplateForRepoChecker(webSite *websitev1beta
 		Env: append(makeEnvCommon(webSite),
 			corev1.EnvVar{
 				Name:  "HOME",
-				Value: "/var/www",
+				Value: "/var/ubuntu",
 			},
 		),
-		SecurityContext: &corev1.SecurityContext{
-			RunAsUser: pointer.Int64Ptr(10000),
-		},
+	}
+
+	newTemplate.Spec.SecurityContext = &corev1.PodSecurityContext{
+		RunAsUser: pointer.Int64Ptr(10000),
+		FSGroup:   pointer.Int64Ptr(10000),
 	}
 
 	if webSite.Spec.DeployKeySecretName != nil {
@@ -476,6 +478,9 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite
 			},
 		)
 	}
+	newTemplate.Spec.SecurityContext = &corev1.PodSecurityContext{
+		FSGroup: pointer.Int64Ptr(10000),
+	}
 
 	newTemplate.Spec.Containers = append(newTemplate.Spec.Containers, corev1.Container{
 		Name:  "nginx",
@@ -521,6 +526,9 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite
 		Name:    "build",
 		Image:   webSite.Spec.BuildImage,
 		Command: []string{"/bin/bash", "-c", "/build/build.sh"},
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser: pointer.Int64Ptr(10000),
+		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				MountPath: "/home/ubuntu",

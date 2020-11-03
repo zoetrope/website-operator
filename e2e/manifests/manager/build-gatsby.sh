@@ -5,9 +5,8 @@ git clone $REPO_URL
 cd $REPO_NAME
 git checkout $REVISION
 
-pip3 install -r requirements.txt
-export PATH=$PATH:$HOME/.local/bin
-mkdocs build
+npm install
+npm run build
 
 rm -rf /data/*
-cp -r site/* /data/
+cp -r public/* /data/

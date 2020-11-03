@@ -7,13 +7,12 @@ resources:
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:
-  - name: build-honkit
+  - name: build-scripts
     files:
       - build-honkit.sh
       - build-honkit-es.sh
-  - name: build-mkdocs
-    files:
       - build-mkdocs.sh
+      - build-gatsby.sh
   - name: httpproxy
     files:
       - httpproxy.tmpl

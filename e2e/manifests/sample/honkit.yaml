@@ -7,7 +7,7 @@ spec:
   buildImage: ghcr.io/zoetrope/node:12.19.0
   buildScript:
     configMap:
-      name: build-honkit
+      name: build-scripts
       key: build-honkit-es.sh
   repoURL: https://github.com/zoetrope/honkit-sample.git
   branch: main

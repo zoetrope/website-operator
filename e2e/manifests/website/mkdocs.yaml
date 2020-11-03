@@ -1,16 +1,17 @@
 apiVersion: website.zoetrope.github.io/v1beta1
 kind: WebSite
 metadata:
-  name: honkit-sample
+  name: mkdocs-sample
   namespace: default
 spec:
-  buildImage: ghcr.io/zoetrope/node:12.19.0
+  buildImage: ghcr.io/zoetrope/python:3.8.5
   buildScript:
     configMap:
       name: build-scripts
-      key: build-honkit.sh
-  repoURL: https://github.com/zoetrope/honkit-sample.git
+      key: build-mkdocs.sh
+  repoURL: git@github.com:zoetrope/mkdocs-sample.git
   branch: main
+  deployKeySecretName: mkdocs-deploy-key
   extraResources:
     - configMap:
         name: httpproxy

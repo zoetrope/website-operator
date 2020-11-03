@@ -3,10 +3,12 @@ kind: Kustomization
 namespace: default
 resources:
   - honkit.yaml
+  - mkdocs.yaml
+  - gatsby.yaml
 generatorOptions:
   disableNameSuffixHash: true
 secretGenerator:
-  - name: honkit-deploy-key
+  - name: mkdocs-deploy-key
     files:
       - .ssh/id_rsa
       - .ssh/config
