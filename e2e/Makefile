@@ -31,7 +31,7 @@ setup-cluster: $(KUBECTL)
 test: launch-kind load-images setup-cluster $(KUBECTL) $(KUSTOMIZE)
 	$(KUBECTL) config use-context kind-$(KIND_CLUSTER_NAME)
 	$(KUSTOMIZE) build ./manifests/manager | $(KUBECTL) apply -f -
-	$(KUBECTL) wait pod -l control-plane=controller-manager -n website-operator-system --for condition=Ready --timeout 180s
+	$(KUBECTL) wait pod -l control-plane=website-operator -n website-operator-system --for condition=Ready --timeout 180s
 	$(KUSTOMIZE) build ./manifests/website | $(KUBECTL) apply -f -
 	env E2E_TEST=1 go test -count=1 -v . -args -ginkgo.progress -ginkgo.v -ginkgo.failFast
 
