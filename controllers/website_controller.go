@@ -195,7 +195,7 @@ func (r *WebSiteReconciler) reconcileBuildScript(ctx context.Context, webSite *w
 	cm.SetName(webSite.Name + BuildScriptSuffix)
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, cm, func() error {
-		setLabels(&cm.ObjectMeta)
+		setStandardLabels(&cm.ObjectMeta)
 		cm.Data = map[string]string{
 			"build.sh": buildScript,
 		}
@@ -222,7 +222,7 @@ func (r *WebSiteReconciler) reconcileRepoCheckerDeployment(ctx context.Context, 
 	deployment.SetName(webSite.Name + RepoCheckerSuffix)
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, deployment, func() error {
-		setLabels(&deployment.ObjectMeta)
+		setStandardLabels(&deployment.ObjectMeta)
 		deployment.Spec.Replicas = pointer.Int32Ptr(1)
 		deployment.Spec.Selector = &metav1.LabelSelector{}
 		if deployment.Spec.Selector.MatchLabels == nil {
@@ -342,7 +342,7 @@ func (r *WebSiteReconciler) reconcileRepoCheckerService(ctx context.Context, web
 	service.SetName(webSite.Name + RepoCheckerSuffix)
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, service, func() error {
-		setLabels(&service.ObjectMeta)
+		setStandardLabels(&service.ObjectMeta)
 		ports := []corev1.ServicePort{
 			{
 				Name:       "repo-checker",
@@ -382,7 +382,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 	deployment.SetName(webSite.Name)
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, deployment, func() error {
-		setLabels(&deployment.ObjectMeta)
+		setStandardLabels(&deployment.ObjectMeta)
 		deployment.Spec.Replicas = &webSite.Spec.Replicas
 		deployment.Spec.Selector = &metav1.LabelSelector{}
 		if deployment.Spec.Selector.MatchLabels == nil {
@@ -418,6 +418,16 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite
 	newTemplate := corev1.PodTemplateSpec{}
 
 	newTemplate.Labels = make(map[string]string)
+	newTemplate.Annotations = make(map[string]string)
+	if webSite.Spec.PodTemplate != nil {
+		for k, v := range webSite.Spec.PodTemplate.Labels {
+			newTemplate.Labels[k] = v
+		}
+		for k, v := range webSite.Spec.PodTemplate.Annotations {
+			newTemplate.Annotations[k] = v
+		}
+	}
+
 	newTemplate.Labels[ManagedByKey] = OperatorName
 	newTemplate.Labels[AppNameKey] = AppName
 	newTemplate.Labels[InstanceKey] = webSite.Name
@@ -580,7 +590,21 @@ func (r *WebSiteReconciler) reconcileNginxService(ctx context.Context, webSite *
 	service.SetName(webSite.Name)
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, service, func() error {
-		setLabels(&service.ObjectMeta)
+		if service.Labels == nil {
+			service.Labels = make(map[string]string)
+		}
+		if service.Annotations == nil {
+			service.Annotations = make(map[string]string)
+		}
+		if webSite.Spec.ServiceTemplate != nil {
+			for k, v := range webSite.Spec.ServiceTemplate.Labels {
+				service.Labels[k] = v
+			}
+			for k, v := range webSite.Spec.ServiceTemplate.Annotations {
+				service.Annotations[k] = v
+			}
+		}
+		setStandardLabels(&service.ObjectMeta)
 		ports := []corev1.ServicePort{
 			{
 				Name:       "nginx",
@@ -677,7 +701,7 @@ func (r *WebSiteReconciler) extraResource(ctx context.Context, webSite *websitev
 	return &obj, nil
 }
 
-func setLabels(om *metav1.ObjectMeta) {
+func setStandardLabels(om *metav1.ObjectMeta) {
 	if om.Labels == nil {
 		om.Labels = make(map[string]string)
 	}

@@ -42,6 +42,14 @@ type WebSiteSpec struct {
 	// +kubebuilder:default=1
 	// +optional
 	Replicas int32 `json:"replicas,omitempty"`
+
+	// PodTemplate is a `Pod` template for nginx container.
+	// +optional
+	PodTemplate *PodTemplate `json:"podTemplate,omitempty"`
+
+	// ServiceTemplate is a `Service` template for nginx.
+	// +optional
+	ServiceTemplate *ServiceTemplate `json:"serviceTemplate,omitempty"`
 }
 
 // DataSource represents the source of data.
@@ -54,6 +62,32 @@ type DataSource struct {
 	// RawData is raw data
 	// +optional
 	RawData *string `json:"rawData,omitempty"`
+}
+
+// PodTemplate defines the desired spec and annotations of Pod
+type PodTemplate struct {
+	// Standard object's metadata.  Only `annotations` and `labels` are valid.
+	// +optional
+	ObjectMeta `json:"metadata,omitempty"`
+}
+
+// ServiceTemplate defines the desired spec and annotations of Service
+type ServiceTemplate struct {
+	// Standard object's metadata.  Only `annotations` and `labels` are valid.
+	// +optional
+	ObjectMeta `json:"metadata,omitempty"`
+}
+
+// ObjectMeta is metadata of objects.
+// This is partially copied from metav1.ObjectMeta.
+type ObjectMeta struct {
+	// Labels is a map of string keys and values.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// Annotations is a map of string keys and values.
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type ConfigMapSource struct {

@@ -92,6 +92,24 @@ spec:
                       type: string
                   type: object
                 type: array
+              podTemplate:
+                description: PodTemplate is a `Pod` template for nginx container.
+                properties:
+                  metadata:
+                    description: Standard object's metadata.  Only `annotations` and `labels` are valid.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: Annotations is a map of string keys and values.
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels is a map of string keys and values.
+                        type: object
+                    type: object
+                type: object
               replicas:
                 default: 1
                 description: Replicas is the number of nginx instances
@@ -100,6 +118,24 @@ spec:
               repoURL:
                 description: RepoURL is the URL of the repository that has contents of the website
                 type: string
+              serviceTemplate:
+                description: ServiceTemplate is a `Service` template for nginx.
+                properties:
+                  metadata:
+                    description: Standard object's metadata.  Only `annotations` and `labels` are valid.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: Annotations is a map of string keys and values.
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels is a map of string keys and values.
+                        type: object
+                    type: object
+                type: object
             required:
             - buildImage
             - buildScript
