@@ -37,6 +37,11 @@ type WebSiteSpec struct {
 	// ExtraResources are resources that will be applied after the build step
 	// +optional
 	ExtraResources []DataSource `json:"extraResources,omitempty"`
+
+	// Replicas is the number of nginx instances
+	// +kubebuilder:default=1
+	// +optional
+	Replicas int32 `json:"replicas,omitempty"`
 }
 
 // DataSource represents the source of data.

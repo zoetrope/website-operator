@@ -56,6 +56,7 @@ You can specify the following fields:
 | branch              | `true`   | The branch of the repository you want to deploy                                         |
 | deployKeySecretName | `false`  | The name of a secret resource that holds a deploy key to access your private repository |
 | extraResources      | `false`  | Any extra resources you want to deploy                                                  |
+| replicas            | `false`  | The number of nginx instances                                                           |
 
 In the build script, you have to copy your built output to `$OUTPUT` directory.
 
