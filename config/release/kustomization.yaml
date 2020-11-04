@@ -7,4 +7,4 @@ patchesStrategicMerge:
   - manager.yaml
 images:
   - name: ghcr.io/zoetrope/website-operator
-    newTag: 0.0.1
+    newTag: 0.0.2
