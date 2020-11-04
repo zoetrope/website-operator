@@ -383,7 +383,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, deployment, func() error {
 		setLabels(&deployment.ObjectMeta)
-		deployment.Spec.Replicas = pointer.Int32Ptr(2)
+		deployment.Spec.Replicas = &webSite.Spec.Replicas
 		deployment.Spec.Selector = &metav1.LabelSelector{}
 		if deployment.Spec.Selector.MatchLabels == nil {
 			deployment.Spec.Selector.MatchLabels = make(map[string]string)

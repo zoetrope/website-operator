@@ -92,6 +92,11 @@ spec:
                       type: string
                   type: object
                 type: array
+              replicas:
+                default: 1
+                description: Replicas is the number of nginx instances
+                format: int32
+                type: integer
               repoURL:
                 description: RepoURL is the URL of the repository that has contents of the website
                 type: string

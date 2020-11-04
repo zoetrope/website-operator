@@ -32,7 +32,7 @@ func testWebSite(name string) {
 		if err != nil {
 			return err
 		}
-		if deployment.Status.AvailableReplicas != 2 {
+		if deployment.Status.AvailableReplicas != 1 {
 			return errors.New("should be ready")
 		}
 		return nil

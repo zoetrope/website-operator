@@ -40,7 +40,7 @@ func testUpdate() {
 			if err != nil {
 				return err
 			}
-			if deployment.Status.UpdatedReplicas != 2 {
+			if deployment.Status.UpdatedReplicas != 1 {
 				return errors.New("should be updated")
 			}
 			return nil
