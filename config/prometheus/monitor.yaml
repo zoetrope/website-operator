@@ -4,13 +4,13 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    control-plane: website-operator
-  name: website-operator-metrics-monitor
-  namespace: website-operator-system
+    control-plane: controller-manager
+  name: controller-manager-metrics-monitor
+  namespace: system
 spec:
   endpoints:
     - path: /metrics
       port: https
   selector:
     matchLabels:
-      control-plane: website-operator
+      control-plane: controller-manager

@@ -3,10 +3,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: webhook-service
-  namespace: website-operator-system
+  namespace: system
 spec:
   ports:
     - port: 443
       targetPort: 9443
   selector:
-    control-plane: website-operator
+    control-plane: controller-manager

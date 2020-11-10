@@ -2,25 +2,25 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    control-plane: website-operator
-  name: website-operator-system
+    control-plane: controller-manager
+  name: system
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: website-operator
-  namespace: website-operator-system
+  name: controller-manager
+  namespace: system
   labels:
-    control-plane: website-operator
+    control-plane: controller-manager
 spec:
   selector:
     matchLabels:
-      control-plane: website-operator
+      control-plane: controller-manager
   replicas: 1
   template:
     metadata:
       labels:
-        control-plane: website-operator
+        control-plane: controller-manager
     spec:
       containers:
         - command:
