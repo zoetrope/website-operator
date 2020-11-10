@@ -257,6 +257,15 @@ func (r *WebSiteReconciler) makePodTemplateForRepoChecker(webSite *websitev1beta
 	newTemplate := corev1.PodTemplateSpec{}
 
 	newTemplate.Labels = make(map[string]string)
+	newTemplate.Annotations = make(map[string]string)
+	if webSite.Spec.PodTemplate != nil {
+		for k, v := range webSite.Spec.PodTemplate.Labels {
+			newTemplate.Labels[k] = v
+		}
+		for k, v := range webSite.Spec.PodTemplate.Annotations {
+			newTemplate.Annotations[k] = v
+		}
+	}
 	newTemplate.Labels[ManagedByKey] = OperatorName
 	newTemplate.Labels[AppNameKey] = AppName
 	newTemplate.Labels[InstanceKey] = webSite.Name + RepoCheckerSuffix
