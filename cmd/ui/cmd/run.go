@@ -4,10 +4,8 @@ import (
 	"net/http"
 
 	"github.com/cybozu-go/well"
-
-	"github.com/zoetrope/website-operator/ui/backend"
-
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
+	"github.com/zoetrope/website-operator/ui/backend"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -44,9 +42,14 @@ func subMain() error {
 	if err != nil {
 		return err
 	}
-	server := backend.NewAPIServer(kubeClient, rawClient)
+	server := backend.NewAPIServer(kubeClient, rawClient, config.allowCORS)
+
 	mux := http.NewServeMux()
 	mux.Handle("/api/v1/", server)
+
+	fs := http.FileServer(http.Dir(config.contentDir))
+	mux.Handle("/", fs)
+
 	s := &well.HTTPServer{
 		Server: &http.Server{
 			Addr:    config.listenAddr,

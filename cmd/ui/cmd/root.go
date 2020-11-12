@@ -10,6 +10,8 @@ import (
 
 var config struct {
 	listenAddr string
+	contentDir string
+	allowCORS  bool
 }
 
 var rootCmd = &cobra.Command{
@@ -36,4 +38,6 @@ func Execute() {
 func init() {
 	fs := rootCmd.Flags()
 	fs.StringVar(&config.listenAddr, "listen-addr", ":8080", "The address the endpoint binds to")
+	fs.StringVar(&config.contentDir, "content-dir", "/dist", "The path of content files")
+	fs.BoolVar(&config.allowCORS, "allow-cors", false, "Allow CORS (for development)")
 }

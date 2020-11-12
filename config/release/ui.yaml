@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - command:
+            - /ui
+          args:
+            - --allow-cors=false
+          image: ghcr.io/zoetrope/website-operator-ui:dev
+          name: ui

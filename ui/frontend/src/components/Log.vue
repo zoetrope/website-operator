@@ -37,8 +37,9 @@ export default {
     }
   },
   mounted() {
+    const apiEndpoint = process.env.DEV_API_ENDPOINT || '/api/v1'
     axios
-        .get('http://localhost:8080/api/v1/logs/' + this.namespace + "/" + this.name)
+        .get(apiEndpoint + '/logs/' + this.namespace + "/" + this.name)
         .then(response => {
           console.log(response.data);
           (this.log = response.data)

@@ -14,11 +14,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewAPIServer(kubeClient client.Client, rawClient *kubernetes.Clientset) http.Handler {
+func NewAPIServer(kubeClient client.Client, rawClient *kubernetes.Clientset, allowCORS bool) http.Handler {
 	return &apiServer{
 		kubeClient: kubeClient,
 		rawClient:  rawClient,
-		allowCORS:  true, //TODO
+		allowCORS:  allowCORS,
 	}
 }
 

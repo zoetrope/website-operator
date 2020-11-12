@@ -4,20 +4,22 @@ metadata:
   name: ui
   namespace: system
   labels:
-    app.kubernetes.io/name: ui
+    app.kubernetes.io/name: website-operator-ui
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: ui
+      app.kubernetes.io/name: website-operator-ui
   replicas: 1
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: ui
+        app.kubernetes.io/name: website-operator-ui
     spec:
       containers:
         - command:
             - /ui
+          args:
+            - --allow-cors=true
           image: ghcr.io/zoetrope/website-operator-ui:dev
           name: ui
           env:

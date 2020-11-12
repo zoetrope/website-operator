@@ -5,6 +5,7 @@ resources:
   - ../default
 patchesStrategicMerge:
   - manager.yaml
+  - ui.yaml
 images:
   - name: ghcr.io/zoetrope/website-operator
     newTag: 0.0.3
