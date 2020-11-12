@@ -36,7 +36,7 @@ test: launch-kind load-images setup-cluster $(KUBECTL) $(KUSTOMIZE)
 	env E2E_TEST=1 go test -count=1 -v . -args -ginkgo.progress -ginkgo.v -ginkgo.failFast
 
 .PHONY: load-images
-load-images: load-operator-images load-checker-image
+load-images: load-operator-images load-checker-image load-ui-image
 
 .PHONY: load-operator-images
 load-operator-images:
@@ -52,6 +52,14 @@ load-checker-image:
 	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)repo-checker:dev); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
 		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)repo-checker:dev; \
+	fi
+
+.PHONY: load-ui-images
+load-ui-image:
+	cd ../ && make build-ui-image TAG=dev
+	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)website-operator-ui:dev); \
+	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
+		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator-ui:dev; \
 	fi
 
 $(KUBECTL):

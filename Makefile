@@ -12,14 +12,16 @@ KUSTOMIZE := $(PWD)/bin/kustomize
 
 WEBSITE_OPERATOR = build/website-operator
 REPO_CHECKER = build/repo-checker
+UI = build/ui
 INSTALL_YAML = build/install.yaml
 GO_FILES := $(shell find . -type f -name '*.go')
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 
-all: $(WEBSITE_OPERATOR) $(REPO_CHECKER)
+all: $(WEBSITE_OPERATOR) $(REPO_CHECKER) $(UI)
 
 # Run tests
+.PHONY: test
 test: generate manifests setup
 	go test -race -v -count 1 ./...
 	go vet ./...
@@ -35,34 +37,48 @@ $(REPO_CHECKER): $(GO_FILES)
 	mkdir -p build
 	go build -o $@ ./cmd/repo-checker
 
+$(UI): $(GO_FILES)
+	mkdir -p build
+	go build -o $@ ./cmd/ui
+
 $(INSTALL_YAML): $(KUSTOMIZE)
 	mkdir -p build
 	$(KUSTOMIZE) build ./config/release > $@
 
-# Generate manifests e.g. CRD, RBAC etc.
+.PHONY: manifests
 manifests: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
-# Generate code
+.PHONY: generate
 generate: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-# Build the docker image
+.PHONY: build-operator-image
 build-operator-image: $(WEBSITE_OPERATOR)
 	cp $(WEBSITE_OPERATOR) ./docker/website-operator
 	docker build --no-cache -t ${REGISTRY}website-operator:${TAG} ./docker/website-operator
 
-# Push the docker image
+.PHONY: push-operator-image
 push-operator-image:
 	docker push ${REGISTRY}website-operator:${TAG}
 
+.PHONY: build-checker-image
 build-checker-image: $(REPO_CHECKER)
 	cp $(REPO_CHECKER) ./docker/repo-checker
 	docker build --no-cache -t ${REGISTRY}repo-checker:${TAG} ./docker/repo-checker
 
-# Push the docker image
+.PHONY: push-checker-image
 push-checker-image:
 	docker push ${REGISTRY}repo-checker:${TAG}
+
+.PHONY: build-ui-image
+build-ui-image: $(UI)
+	cp $(UI) ./docker/ui
+	docker build --no-cache -t ${REGISTRY}website-operator-ui:${TAG} ./docker/ui
+
+.PHONY: push-ui-image
+push-ui-image:
+	docker push ${REGISTRY}website-operator-ui:${TAG}
 
 .PHONY: setup
 setup: staticcheck $(KUBEBUILDER) $(CONTROLLER_GEN)

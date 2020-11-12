@@ -1,0 +1,22 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: ui-role
+rules:
+- apiGroups:
+  - website.zoetrope.github.io
+  resources:
+  - websites
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - website.zoetrope.github.io
+  resources:
+  - websites/status
+  verbs:
+  - get
