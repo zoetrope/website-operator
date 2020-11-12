@@ -34,16 +34,36 @@ func (s apiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type website struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+	Ready     string `json:"ready"`
+	Revision  string `json:"revision"`
+	RepoURL   string `json:"url"`
+	Branch    string `json:"branch"`
+}
+
 func (s apiServer) listWebSites(w http.ResponseWriter, r *http.Request) {
 	var websites v1beta1.WebSiteList
 	err := s.kubeClient.List(r.Context(), &websites)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	resp := make([]website, len(websites.Items))
+	for i, item := range websites.Items {
+		resp[i] = website{
+			Namespace: item.Namespace,
+			Name:      item.Name,
+			Ready:     string(item.Status.Ready),
+			Revision:  item.Status.Revision,
+			RepoURL:   item.Spec.RepoURL,
+			Branch:    item.Spec.Branch,
+		}
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(websites)
+	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		log.Error("failed to output JSON", map[string]interface{}{
 			log.FnError: err.Error(),
