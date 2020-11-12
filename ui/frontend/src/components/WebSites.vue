@@ -37,7 +37,9 @@
         <td>{{ item.branch }}</td>
         <td>{{ item.ready }}</td>
         <td>{{ item.revision }}</td>
-        <td>-</td>
+        <td>
+          <Log v-bind:name="item.name" v-bind:namespace="item.namespace"/>
+        </td>
       </tr>
       </tbody>
     </template>
@@ -45,8 +47,10 @@
 </template>
 <script>
 import axios from 'axios';
+import Log from "./Log"
 
 export default {
+  components: {Log},
   data() {
     return {
       websites: [],
