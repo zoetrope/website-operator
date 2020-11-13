@@ -30,13 +30,6 @@ spec:
             - --repochecker-container-image=ghcr.io/zoetrope/repo-checker:dev
           image: ghcr.io/zoetrope/website-operator:dev
           name: manager
-          resources:
-            limits:
-              cpu: 2000m
-              memory: 2Gi
-            requests:
-              cpu: 500m
-              memory: 256Mi
           env:
             - name: POD_NAMESPACE
               valueFrom:
