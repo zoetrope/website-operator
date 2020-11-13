@@ -24,7 +24,7 @@ func testWebSite(name string) {
 			return fmt.Errorf("%s should be ready", name)
 		}
 		return nil
-	}, 1*time.Minute).Should(Succeed())
+	}, 3*time.Minute).Should(Succeed())
 
 	var deployment appsv1.Deployment
 	Eventually(func() error {
