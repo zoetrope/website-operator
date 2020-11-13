@@ -5,11 +5,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2020-11-13
+
+### Added
+
+- Add Web UI ([#5](https://github.com/zoetrope/website-operator/pull/5))
+
 ## [0.0.3] - 2020-11-10
 
 ### Added
 
-- Apply podTemplate to repo-checker deployment (only labels and annotations) ([#3](https://github.com/zoetrope/website-operator/pull/4))
+- Apply podTemplate to repo-checker deployment (only labels and annotations) ([#4](https://github.com/zoetrope/website-operator/pull/4))
 
 ## [0.0.2] - 2020-11-04
 
@@ -26,7 +32,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 This is the first public release.
 
-[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/zoetrope/website-operator/compare/v0.0.3...v0.1.0
 [0.0.3]: https://github.com/zoetrope/website-operator/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/zoetrope/website-operator/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/zoetrope/website-operator/compare/fd94306d63596e50c351fea50fba819c1aa349bc...v0.0.1
