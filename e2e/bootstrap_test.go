@@ -42,9 +42,16 @@ func testWebSite(name string) {
 	Expect(err).ShouldNot(HaveOccurred())
 	req.Host = name + ".default.example.com"
 	client := http.Client{}
-	res, err := client.Do(req)
-	Expect(err).ShouldNot(HaveOccurred())
-	Expect(res.StatusCode).Should(Equal(http.StatusOK))
+	Eventually(func() error {
+		res, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		if res.StatusCode != http.StatusOK {
+			return fmt.Errorf("status should be ok: %s", res.Status)
+		}
+		return nil
+	}, 30*time.Second).Should(Succeed())
 }
 
 func testBootstrap() {
