@@ -9,6 +9,7 @@ spec:
     configMap:
       name: build-scripts
       key: build-honkit-es.sh
+  buildSecretName: build-secret
   repoURL: https://github.com/zoetrope/honkit-sample.git
   branch: main
   extraResources:

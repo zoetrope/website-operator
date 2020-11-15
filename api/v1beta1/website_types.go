@@ -21,6 +21,10 @@ type WebSiteSpec struct {
 	// +kubebuiler:validation:Required
 	BuildScript DataSource `json:"buildScript"`
 
+	// BuildSecretName is the name of the secret resource available in a build script
+	// +optional
+	BuildSecretName *string `json:"buildSecretName,omitempty"`
+
 	// RepoURL is the URL of the repository that has contents of the website
 	// +kubebuiler:validation:Required
 	RepoURL string `json:"repoURL"`

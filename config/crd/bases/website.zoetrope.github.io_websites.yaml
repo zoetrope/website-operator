@@ -66,6 +66,9 @@ spec:
                     description: RawData is raw data
                     type: string
                 type: object
+              buildSecretName:
+                description: BuildSecretName is the name of the secret resource available in a build script
+                type: string
               deployKeySecretName:
                 description: DeployKeySecretName is the name of the secret resource that contains the deploy key to access the private repository
                 type: string
