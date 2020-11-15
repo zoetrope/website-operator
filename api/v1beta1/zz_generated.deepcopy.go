@@ -172,6 +172,11 @@ func (in *WebSiteList) DeepCopyObject() runtime.Object {
 func (in *WebSiteSpec) DeepCopyInto(out *WebSiteSpec) {
 	*out = *in
 	in.BuildScript.DeepCopyInto(&out.BuildScript)
+	if in.BuildSecretName != nil {
+		in, out := &in.BuildSecretName, &out.BuildSecretName
+		*out = new(string)
+		**out = **in
+	}
 	if in.DeployKeySecretName != nil {
 		in, out := &in.DeployKeySecretName, &out.DeployKeySecretName
 		*out = new(string)

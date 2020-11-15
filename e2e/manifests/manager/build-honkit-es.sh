@@ -11,9 +11,9 @@ sed -i -e "/index/c\      \"index\": \"${RESOURCE_NAME}-${REVISION}\"," book.js
 npm install
 npm run build
 
-curl -X DELETE http://honkit-es:9200/${REPO_NAME}-${REVISION}
-curl -X PUT http://honkit-es:9200/${REPO_NAME}-${REVISION} -H 'Content-Type: application/json' -d @mappings.json
-curl -X POST http://honkit-es:9200/${REPO_NAME}-${REVISION}/_bulk -H 'Content-Type: application/json' --data-binary @_book/search_index.json
+curl -X DELETE ${ELASTIC_HOST}/${REPO_NAME}-${REVISION}
+curl -X PUT ${ELASTIC_HOST}/${REPO_NAME}-${REVISION} -H 'Content-Type: application/json' -d @mappings.json
+curl -X POST ${ELASTIC_HOST}/${REPO_NAME}-${REVISION}/_bulk -H 'Content-Type: application/json' --data-binary @_book/search_index.json
 
 rm -rf $OUTPUT/*
 cp -r _book/* $OUTPUT/

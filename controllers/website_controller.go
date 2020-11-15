@@ -68,6 +68,7 @@ type WebSiteReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
 
@@ -400,7 +401,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 		deployment.Spec.Selector.MatchLabels[ManagedByKey] = OperatorName
 		deployment.Spec.Selector.MatchLabels[AppNameKey] = AppName
 
-		podTemplate, err := r.makeNginxPodTemplate(webSite, revision)
+		podTemplate, err := r.makeNginxPodTemplate(ctx, webSite, revision)
 		if err != nil {
 			return err
 		}
@@ -423,7 +424,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 	return false, nil
 }
 
-func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite, revision string) (*corev1.PodTemplateSpec, error) {
+func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (*corev1.PodTemplateSpec, error) {
 	newTemplate := corev1.PodTemplateSpec{}
 
 	newTemplate.Labels = make(map[string]string)
@@ -588,6 +589,28 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(webSite *websitev1beta1.WebSite
 			Name:      "deploy-key",
 		})
 	}
+
+	if webSite.Spec.BuildSecretName != nil {
+		secret := corev1.Secret{}
+		err := r.client.Get(ctx, client.ObjectKey{Namespace: webSite.Namespace, Name: *webSite.Spec.BuildSecretName}, &secret)
+		if err != nil {
+			return nil, err
+		}
+		for k := range secret.Data {
+			buildContainer.Env = append(buildContainer.Env, corev1.EnvVar{
+				Name: k,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: secret.Name,
+						},
+						Key: k,
+					},
+				},
+			})
+		}
+	}
+
 	newTemplate.Spec.InitContainers = append(newTemplate.Spec.InitContainers, buildContainer)
 	return &newTemplate, nil
 }
