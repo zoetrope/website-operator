@@ -102,7 +102,7 @@ func (r *WebSiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
-	if isUpdatedAtLeastOnce {
+	if isUpdatedAtLeastOnce || webSite.Status.Ready == corev1.ConditionFalse {
 		webSite.Status.Ready = corev1.ConditionTrue
 		webSite.Status.Revision = revision
 		errUpdate := r.client.Status().Update(ctx, webSite)
