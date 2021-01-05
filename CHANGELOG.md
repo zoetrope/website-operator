@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2021-01-05
+
+### Added
+
+- Support secret resource for build script ([#6](https://github.com/zoetrope/website-operator/pull/6))
+
+### Changed
+
+- Fixed the problem that prevented detection of revision changes ([#7](https://github.com/zoetrope/website-operator/pull/7))
+
 ## [0.1.0] - 2020-11-13
 
 ### Added
@@ -32,7 +42,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 This is the first public release.
 
-[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/zoetrope/website-operator/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/zoetrope/website-operator/compare/v0.0.3...v0.1.0
 [0.0.3]: https://github.com/zoetrope/website-operator/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/zoetrope/website-operator/compare/v0.0.1...v0.0.2
