@@ -10,6 +10,7 @@ import (
 )
 
 func subMain(ctx context.Context) error {
+	_ = os.RemoveAll(config.workDir)
 	err := os.MkdirAll(config.workDir, 0755)
 	if err != nil {
 		return err
