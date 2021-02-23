@@ -1,7 +1,14 @@
 domain: zoetrope.github.io
+layout: go.kubebuilder.io/v3
+projectName: website-operator
 repo: github.com/zoetrope/website-operator
 resources:
-- group: website
-  kind: WebSite
+- api:
+    crdVersion: v1
+  controller: true
+  domain: zoetrope.github.io
+  group: website
+  kind: webSite
+  path: github.com/zoetrope/website-operator/api/v1
   version: v1beta1
-version: "2"
+version: "3"

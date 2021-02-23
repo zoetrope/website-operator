@@ -62,18 +62,18 @@ type WebSiteReconciler struct {
 	operatorNamespace         string
 }
 
-// +kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups="",resources=services/status,verbs=get
-// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
+//+kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=sebsite.zoetrope.github.io,resources=websites/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=services/status,verbs=get
+//+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
 
-func (r *WebSiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *WebSiteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("website", req.NamespacedName)
 
 	webSite := &websitev1beta1.WebSite{}
@@ -741,11 +741,12 @@ func setStandardLabels(om *metav1.ObjectMeta) {
 	om.Labels[AppNameKey] = AppName
 }
 
-func selectReadyWebSite(obj runtime.Object) []string {
+func selectReadyWebSite(obj client.Object) []string {
 	site := obj.(*websitev1beta1.WebSite)
 	return []string{string(site.Status.Ready)}
 }
 
+// SetupWithManager sets up the controller with the Manager.
 func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	err := mgr.GetFieldIndexer().IndexField(ctx, &websitev1beta1.WebSite{}, website.WebSiteIndexField, selectReadyWebSite)

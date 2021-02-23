@@ -1,10 +1,8 @@
 include common.mk
 
+SHELL := /bin/bash
 TAG ?= latest
-CRD_OPTIONS ?= "crd:crdVersions=v1"
-
-KUBEBUILDER_ASSETS := $(PWD)/bin
-export KUBEBUILDER_ASSETS
+CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
 CONTROLLER_GEN := $(PWD)/bin/controller-gen
 KUBEBUILDER := $(PWD)/bin/kubebuilder
@@ -20,15 +18,47 @@ GOARCH := $(shell go env GOARCH)
 
 all: $(WEBSITE_OPERATOR) $(REPO_CHECKER) $(UI)
 
-# Run tests
-.PHONY: test
-test: generate manifests setup
-	go test -race -v -count 1 ./...
-	go vet ./...
-	test -z $$(gofmt -s -l . | tee /dev/stderr)
-	staticcheck ./...
+##@ General
 
-# Build manager binary
+# The help target prints out all targets with their descriptions organized
+# beneath their categories. The categories are represented by '##@' and the
+# target descriptions by '##'. The awk commands is responsible for reading the
+# entire set of makefiles included in this invocation, looking for lines of the
+# file as xyz: ## something, and then pretty-format the target and help. Then,
+# if there's a line with ##@ something, that gets pretty-printed as a category.
+# More info on the usage of ANSI control characters for terminal formatting:
+# https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters
+# More info on the awk command:
+# http://linuxcommand.org/lc3_adv_awk.php
+
+help: ## Display this help.
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+##@ Development
+
+.PHONY: manifests
+manifests: $(CONTROLLER_GEN) ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+.PHONY: generate
+generate: $(CONTROLLER_GEN) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
+fmt: ## Run go fmt against code.
+	go fmt ./...
+
+vet: ## Run go vet against code.
+	go vet ./...
+
+ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
+.PHONY: test
+test: manifests generate ## fmt vet ## Run tests.
+	mkdir -p ${ENVTEST_ASSETS_DIR}
+	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.1/hack/setup-envtest.sh
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+
+##@ Build
+
 $(WEBSITE_OPERATOR): $(GO_FILES) generate
 	mkdir -p build
 	go build -o $@ ./cmd/website-operator
@@ -48,14 +78,6 @@ frontend:
 $(INSTALL_YAML): $(KUSTOMIZE)
 	mkdir -p build
 	$(KUSTOMIZE) build ./config/release > $@
-
-.PHONY: manifests
-manifests: $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-
-.PHONY: generate
-generate: $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: build-operator-image
 build-operator-image: $(WEBSITE_OPERATOR)
@@ -88,24 +110,12 @@ push-ui-image:
 	docker push ${REGISTRY}website-operator-ui:${TAG}
 
 .PHONY: setup
-setup: staticcheck $(KUBEBUILDER) $(CONTROLLER_GEN)
-
-.PHONY: staticcheck
-staticcheck:
-	if ! which staticcheck >/dev/null; then \
-		cd /tmp; env GOFLAGS= GO111MODULE=on go get honnef.co/go/tools/cmd/staticcheck; \
-	fi
+setup: $(KUBEBUILDER) $(CONTROLLER_GEN)
 
 $(KUBEBUILDER):
-	rm -rf tmp && mkdir -p tmp
 	mkdir -p bin
-	curl -sfL https://go.kubebuilder.io/dl/$(KUBEBUILDER_VERSION)/$(GOOS)/$(GOARCH) | tar -xz -C tmp/
-	mv tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOOS)_$(GOARCH)/bin/* bin/
-	curl -sfL https://github.com/kubernetes/kubernetes/archive/v$(KUBERNETES_VERSION).tar.gz | tar zxf - -C tmp/
-	mv tmp/kubernetes-$(KUBERNETES_VERSION) tmp/kubernetes
-	cd tmp/kubernetes; make all WHAT="cmd/kube-apiserver"
-	mv tmp/kubernetes/_output/bin/kube-apiserver bin/
-	rm -rf tmp
+	curl -sfL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VERSION)/kubebuilder_$(GOOS)_$(GOARCH) -o $@
+	chmod +x $@
 
 $(CONTROLLER_GEN):
 	mkdir -p bin

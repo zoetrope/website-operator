@@ -10,6 +10,6 @@ spec:
         - command:
             - /website-operator
           args:
-            - --enable-leader-election
+            - --leader-elect
           image: ghcr.io/zoetrope/website-operator:dev
           name: manager

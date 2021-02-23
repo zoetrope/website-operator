@@ -18,3 +18,4 @@ bin
 /vendor
 build
 tmp
+testbin/*
