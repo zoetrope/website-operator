@@ -69,7 +69,6 @@ type WebSiteReconciler struct {
 //+kubebuilder:rbac:groups="",resources=services/status,verbs=get
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get
-//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
 
@@ -590,25 +589,18 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 		})
 	}
 
-	if webSite.Spec.BuildSecretName != nil {
-		secret := corev1.Secret{}
-		err := r.client.Get(ctx, client.ObjectKey{Namespace: webSite.Namespace, Name: *webSite.Spec.BuildSecretName}, &secret)
-		if err != nil {
-			return nil, err
-		}
-		for k := range secret.Data {
-			buildContainer.Env = append(buildContainer.Env, corev1.EnvVar{
-				Name: k,
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: secret.Name,
-						},
-						Key: k,
+	for _, secret := range webSite.Spec.BuildSecrets {
+		buildContainer.Env = append(buildContainer.Env, corev1.EnvVar{
+			Name: secret.Key,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secret.Name,
 					},
+					Key: secret.Key,
 				},
-			})
-		}
+			},
+		})
 	}
 
 	newTemplate.Spec.InitContainers = append(newTemplate.Spec.InitContainers, buildContainer)

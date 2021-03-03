@@ -21,9 +21,9 @@ type WebSiteSpec struct {
 	// +kubebuiler:validation:Required
 	BuildScript DataSource `json:"buildScript"`
 
-	// BuildSecretName is the name of the secret resource available in a build script
+	// BuildSecrets is the list of secrets you can use in a build script
 	// +optional
-	BuildSecretName *string `json:"buildSecretName,omitempty"`
+	BuildSecrets []SecretKey `json:"buildSecrets,omitempty"`
 
 	// RepoURL is the URL of the repository that has contents of the website
 	// +kubebuiler:validation:Required
@@ -54,6 +54,14 @@ type WebSiteSpec struct {
 	// ServiceTemplate is a `Service` template for nginx.
 	// +optional
 	ServiceTemplate *ServiceTemplate `json:"serviceTemplate,omitempty"`
+}
+
+// SecretKey represents the name and key of a secret resource.
+type SecretKey struct {
+	// Name is the name of the secret resource
+	Name string `json:"name"`
+	// Key is the key of the secret resource
+	Key string `json:"key"`
 }
 
 // DataSource represents the source of data.
