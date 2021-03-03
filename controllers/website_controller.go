@@ -310,6 +310,10 @@ func (r *WebSiteReconciler) makePodTemplateForRepoChecker(webSite *websitev1beta
 			},
 		)
 	}
+	for _, secret := range webSite.Spec.ImagePullSecrets {
+		newTemplate.Spec.ImagePullSecrets = append(newTemplate.Spec.ImagePullSecrets, secret)
+	}
+
 	newTemplate.Spec.Containers = append(newTemplate.Spec.Containers, container)
 	return &newTemplate, nil
 }
@@ -601,6 +605,9 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 				},
 			},
 		})
+	}
+	for _, secret := range webSite.Spec.ImagePullSecrets {
+		newTemplate.Spec.ImagePullSecrets = append(newTemplate.Spec.ImagePullSecrets, secret)
 	}
 
 	newTemplate.Spec.InitContainers = append(newTemplate.Spec.InitContainers, buildContainer)
