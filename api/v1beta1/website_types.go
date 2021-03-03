@@ -115,10 +115,10 @@ type WebSiteStatus struct {
 	Ready corev1.ConditionStatus `json:"ready"`
 }
 
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.ready"
-// +kubebuilder:printcolumn:name="REVISION",type="string",JSONPath=".status.revision"
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.ready"
+//+kubebuilder:printcolumn:name="REVISION",type="string",JSONPath=".status.revision"
 
 // WebSite is the Schema for the websites API
 type WebSite struct {
@@ -129,7 +129,7 @@ type WebSite struct {
 	Status WebSiteStatus `json:"status,omitempty"`
 }
 
-// +kubebuilder:object:root=true
+//+kubebuilder:object:root=true
 
 // WebSiteList contains a list of WebSite
 type WebSiteList struct {

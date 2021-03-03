@@ -9,7 +9,6 @@ import (
 	"github.com/zoetrope/website-operator"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -32,13 +31,13 @@ type revisionWatcher struct {
 }
 
 // Start implements Runnable.Start
-func (w revisionWatcher) Start(ch <-chan struct{}) error {
+func (w revisionWatcher) Start(ctx context.Context) error {
 	ticker := time.NewTicker(w.interval)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-ch:
-			return nil
+		case <-ctx.Done():
+			return ctx.Err()
 		case <-ticker.C:
 			err := w.revisionChanged(context.Background())
 			if err != nil {
@@ -66,10 +65,7 @@ func (w revisionWatcher) revisionChanged(ctx context.Context) error {
 		}
 		w.log.Info("revisionChanged", "currentRevision", site.Status.Revision, "latestRevision", latestRev)
 		w.channel <- event.GenericEvent{
-			Meta: &metav1.ObjectMeta{
-				Namespace: site.Namespace,
-				Name:      site.Name,
-			},
+			Object: &site,
 		}
 	}
 	return nil

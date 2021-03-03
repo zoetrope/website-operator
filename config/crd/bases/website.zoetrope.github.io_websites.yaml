@@ -4,7 +4,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.0
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: websites.website.zoetrope.github.io
 spec:
@@ -29,10 +29,14 @@ spec:
         description: WebSite is the Schema for the websites API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -44,7 +48,8 @@ spec:
                 description: Branch is the branch name of the repository
                 type: string
               buildImage:
-                description: BuildImage is the container image name that will be used to build the website
+                description: BuildImage is the container image name that will be used
+                  to build the website
                 type: string
               buildScript:
                 description: BuildScript is the script to build the website
@@ -67,15 +72,19 @@ spec:
                     type: string
                 type: object
               buildSecretName:
-                description: BuildSecretName is the name of the secret resource available in a build script
+                description: BuildSecretName is the name of the secret resource available
+                  in a build script
                 type: string
               deployKeySecretName:
-                description: DeployKeySecretName is the name of the secret resource that contains the deploy key to access the private repository
+                description: DeployKeySecretName is the name of the secret resource
+                  that contains the deploy key to access the private repository
                 type: string
               extraResources:
-                description: ExtraResources are resources that will be applied after the build step
+                description: ExtraResources are resources that will be applied after
+                  the build step
                 items:
-                  description: DataSource represents the source of data. Only one of its members may be specified.
+                  description: DataSource represents the source of data. Only one
+                    of its members may be specified.
                   properties:
                     configMap:
                       description: ConfigMapName is the name of the ConfigMap
@@ -99,7 +108,8 @@ spec:
                 description: PodTemplate is a `Pod` template for nginx container.
                 properties:
                   metadata:
-                    description: Standard object's metadata.  Only `annotations` and `labels` are valid.
+                    description: Standard object's metadata.  Only `annotations` and
+                      `labels` are valid.
                     properties:
                       annotations:
                         additionalProperties:
@@ -119,13 +129,15 @@ spec:
                 format: int32
                 type: integer
               repoURL:
-                description: RepoURL is the URL of the repository that has contents of the website
+                description: RepoURL is the URL of the repository that has contents
+                  of the website
                 type: string
               serviceTemplate:
                 description: ServiceTemplate is a `Service` template for nginx.
                 properties:
                   metadata:
-                    description: Standard object's metadata.  Only `annotations` and `labels` are valid.
+                    description: Standard object's metadata.  Only `annotations` and
+                      `labels` are valid.
                     properties:
                       annotations:
                         additionalProperties:

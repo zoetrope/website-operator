@@ -22,14 +22,30 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
+      securityContext:
+        runAsNonRoot: true
       containers:
         - command:
             - /website-operator
           args:
-            - --enable-leader-election
+            - --leader-elect
             - --repochecker-container-image=ghcr.io/zoetrope/repo-checker:dev
           image: ghcr.io/zoetrope/website-operator:dev
           name: manager
+          securityContext:
+            allowPrivilegeEscalation: false
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
           env:
             - name: POD_NAMESPACE
               valueFrom:
