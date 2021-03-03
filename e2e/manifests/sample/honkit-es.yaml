@@ -9,7 +9,9 @@ spec:
     configMap:
       name: build-scripts
       key: build-honkit-es.sh
-  buildSecretName: build-secret
+  buildSecrets:
+    - name: build-secret
+      key: ELASTIC_HOST
   repoURL: https://github.com/zoetrope/honkit-sample.git
   branch: main
   extraResources:

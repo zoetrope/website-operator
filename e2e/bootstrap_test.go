@@ -36,7 +36,7 @@ func testWebSite(name string) {
 			return errors.New("should be ready")
 		}
 		return nil
-	}, 3*time.Minute).Should(Succeed())
+	}, 5*time.Minute).Should(Succeed())
 
 	req, err := http.NewRequest(http.MethodGet, "http://127.0.0.1", nil)
 	Expect(err).ShouldNot(HaveOccurred())
