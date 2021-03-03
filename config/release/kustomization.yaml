@@ -8,6 +8,6 @@ patchesStrategicMerge:
   - ui.yaml
 images:
   - name: ghcr.io/zoetrope/website-operator
-    newTag: 0.1.2
+    newTag: 0.2.0
   - name: ghcr.io/zoetrope/website-operator-ui
-    newTag: 0.1.2
+    newTag: 0.2.0

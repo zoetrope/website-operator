@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2021-03-03
+
+### Changed
+- Stop access to secret resources ([#11](https://github.com/zoetrope/website-operator/pull/11))
+
 ## [0.1.2] - 2021-03-03
 
 ### Changed
@@ -48,7 +53,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 This is the first public release.
 
-[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/zoetrope/website-operator/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/zoetrope/website-operator/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/zoetrope/website-operator/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/zoetrope/website-operator/compare/v0.0.3...v0.1.0
