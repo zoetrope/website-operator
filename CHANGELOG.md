@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2021-03-03
+
+### Changed
+- Support Kubernetes v1.20 ([#10](https://github.com/zoetrope/website-operator/pull/10))
+- Fixed the bug that repo-checker will fail to clone the target repository ([#9](https://github.com/zoetrope/website-operator/pull/9))
+
 ## [0.1.1] - 2021-01-05
 
 ### Added
@@ -42,7 +48,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 This is the first public release.
 
-[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/zoetrope/website-operator/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/zoetrope/website-operator/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/zoetrope/website-operator/compare/v0.0.3...v0.1.0
 [0.0.3]: https://github.com/zoetrope/website-operator/compare/v0.0.2...v0.0.3

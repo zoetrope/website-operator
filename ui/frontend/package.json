@@ -1,6 +1,6 @@
 {
   "name": "website-operator-ui",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -9,22 +9,22 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
-    "core-js": "^3.8.2",
+    "core-js": "^3.9.1",
     "vue": "^2.6.12",
-    "vuetify": "^2.4.0"
+    "vuetify": "^2.4.5"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.5.9",
-    "@vue/cli-plugin-eslint": "~4.5.9",
-    "@vue/cli-service": "~4.5.9",
+    "@vue/cli-plugin-babel": "~4.5.11",
+    "@vue/cli-plugin-eslint": "~4.5.11",
+    "@vue/cli-service": "~4.5.11",
     "babel-eslint": "^10.1.0",
-    "eslint": "^7.17.0",
-    "eslint-plugin-vue": "^7.4.1",
-    "sass": "^1.32.0",
-    "sass-loader": "^10.1.0",
-    "vue-cli-plugin-vuetify": "~2.0.9",
+    "eslint": "^7.21.0",
+    "eslint-plugin-vue": "^7.7.0",
+    "sass": "^1.32.8",
+    "sass-loader": "^11.0.1",
+    "vue-cli-plugin-vuetify": "~2.2.0",
     "vue-template-compiler": "^2.6.12",
-    "vuetify-loader": "^1.6.0"
+    "vuetify-loader": "^1.7.2"
   },
   "eslintConfig": {
     "root": true,
