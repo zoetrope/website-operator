@@ -10,7 +10,7 @@ All resources (Namespace, CustomResourceDefinitions, Deployment and RBACs) are i
 You can just install the manifest as follows:
 
 ```console
-kubectl apply -f https://github.com/zoetrope/website-operator/releases/download/v0.2.1/install.yaml
+kubectl apply -f https://github.com/zoetrope/website-operator/releases/download/v0.2.2/install.yaml
 ```
 
 ## Usage
