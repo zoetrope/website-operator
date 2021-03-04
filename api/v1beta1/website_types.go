@@ -111,6 +111,11 @@ type ConfigMapSource struct {
 	// +kubebuiler:validation:Required
 	Name string `json:"name"`
 
+	// Namespace is the namespace of a configmap resource
+	// if omitted, it will be the same namespace as the WebSite resource
+	// +optional
+	Namespace string `json:"namespace"`
+
 	// Key is the name of a key
 	// +kubebuiler:validation:Required
 	Key string `json:"key"`
