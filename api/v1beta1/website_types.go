@@ -25,6 +25,10 @@ type WebSiteSpec struct {
 	// +optional
 	BuildSecrets []SecretKey `json:"buildSecrets,omitempty"`
 
+	// ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling the images (buildImage, nginx and repo-checker).
+	// +optional
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+
 	// RepoURL is the URL of the repository that has contents of the website
 	// +kubebuiler:validation:Required
 	RepoURL string `json:"repoURL"`

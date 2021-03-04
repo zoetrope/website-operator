@@ -5,6 +5,7 @@
 package v1beta1
 
 import (
+	"k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -190,6 +191,11 @@ func (in *WebSiteSpec) DeepCopyInto(out *WebSiteSpec) {
 	if in.BuildSecrets != nil {
 		in, out := &in.BuildSecrets, &out.BuildSecrets
 		*out = make([]SecretKey, len(*in))
+		copy(*out, *in)
+	}
+	if in.ImagePullSecrets != nil {
+		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
+		*out = make([]v1.LocalObjectReference, len(*in))
 		copy(*out, *in)
 	}
 	if in.DeployKeySecretName != nil {
