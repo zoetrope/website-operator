@@ -63,6 +63,11 @@ spec:
                       name:
                         description: Name is the name of a configmap resource
                         type: string
+                      namespace:
+                        description: Namespace is the namespace of a configmap resource
+                          if omitted, it will be the same namespace as the WebSite
+                          resource
+                        type: string
                     required:
                     - key
                     - name
@@ -107,6 +112,11 @@ spec:
                           type: string
                         name:
                           description: Name is the name of a configmap resource
+                          type: string
+                        namespace:
+                          description: Namespace is the namespace of a configmap resource
+                            if omitted, it will be the same namespace as the WebSite
+                            resource
                           type: string
                       required:
                       - key

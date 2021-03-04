@@ -177,14 +177,18 @@ func (r *WebSiteReconciler) reconcileBuildScript(ctx context.Context, webSite *w
 		buildScript = *webSite.Spec.BuildScript.RawData
 	} else if webSite.Spec.BuildScript.ConfigMap != nil {
 		buildScriptConfigMap := &corev1.ConfigMap{}
-		err := r.client.Get(ctx, client.ObjectKey{Namespace: r.operatorNamespace, Name: (*webSite.Spec.BuildScript.ConfigMap).Name}, buildScriptConfigMap)
+		ns := r.operatorNamespace
+		if len((*webSite.Spec.BuildScript.ConfigMap).Namespace) != 0 {
+			ns = (*webSite.Spec.BuildScript.ConfigMap).Namespace
+		}
+		err := r.client.Get(ctx, client.ObjectKey{Namespace: ns, Name: (*webSite.Spec.BuildScript.ConfigMap).Name}, buildScriptConfigMap)
 		if err != nil {
 			return false, err
 		}
 		var ok bool
 		buildScript, ok = buildScriptConfigMap.Data[(*webSite.Spec.BuildScript.ConfigMap).Key]
 		if !ok {
-			return false, fmt.Errorf("ConfigMap %s does not have %s", (*webSite.Spec.BuildScript.ConfigMap).Name, (*webSite.Spec.BuildScript.ConfigMap).Key)
+			return false, fmt.Errorf("ConfigMap %s:%s does not have %s", ns, (*webSite.Spec.BuildScript.ConfigMap).Name, (*webSite.Spec.BuildScript.ConfigMap).Key)
 		}
 	} else {
 		return false, errors.New("buildScript should not be empty")
@@ -696,14 +700,18 @@ func (r *WebSiteReconciler) extraResource(ctx context.Context, webSite *websitev
 		resourceTemplate = *res.RawData
 	} else if res.ConfigMap != nil {
 		resourceTemplateConfigMap := &corev1.ConfigMap{}
-		err := r.client.Get(ctx, client.ObjectKey{Namespace: r.operatorNamespace, Name: (*res.ConfigMap).Name}, resourceTemplateConfigMap)
+		ns := r.operatorNamespace
+		if len((*res.ConfigMap).Namespace) != 0 {
+			ns = (*res.ConfigMap).Namespace
+		}
+		err := r.client.Get(ctx, client.ObjectKey{Namespace: ns, Name: (*res.ConfigMap).Name}, resourceTemplateConfigMap)
 		if err != nil {
 			return nil, err
 		}
 		var ok bool
 		resourceTemplate, ok = resourceTemplateConfigMap.Data[(*res.ConfigMap).Key]
 		if !ok {
-			return nil, fmt.Errorf("ConfigMap %s does not have %s", (*res.ConfigMap).Name, (*res.ConfigMap).Key)
+			return nil, fmt.Errorf("ConfigMap %s:%s does not have %s", ns, (*res.ConfigMap).Name, (*res.ConfigMap).Key)
 		}
 	} else {
 		return nil, errors.New("extraResource should not be empty")
