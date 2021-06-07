@@ -44,6 +44,11 @@ spec:
         npm run build
         rm -rf $OUTPUT/*
         cp -r _book/* $OUTPUT/
+  jobScript: 
+    rawData: |
+        #!/bin/bash -ex
+        curl -k -X POST https://elasticsearch:9200/test/_bulk -H 'Content-Type: application/json'  --data-binary @index.json
+
   repoURL: https://github.com/zoetrope/honkit-sample.git
   branch: main
 ```
@@ -52,13 +57,14 @@ You can specify the following fields:
 
 | Name                | Required | Description                                                                             |
 | ------------------- | -------- | --------------------------------------------------------------------------------------- |
-| buildImage          | `true`   | The name of container image to build your site                                          |
-| buildScript         | `true`   | The script to build your site                                                           |
+| buildImage          | `true`   | The name of a container image to build your site                                        |
+| buildScript         | `true`   | A script to build your site                                                             |
 | repoURL             | `true`   | The URL of a repository that holds your site's content                                  |
 | branch              | `true`   | The branch of the repository you want to deploy                                         |
 | deployKeySecretName | `false`  | The name of a secret resource that holds a deploy key to access your private repository |
 | extraResources      | `false`  | Any extra resources you want to deploy                                                  |
 | replicas            | `false`  | The number of nginx instances                                                           |
+| jobScript           | `false`  | A script to execute in Job once after build (ex. registering search index)              |
 
 In the build script, you have to copy your built output to `$OUTPUT` directory.
 
@@ -72,9 +78,9 @@ The following environment variables are available in the build script:
 | REVISION  | The revision of a repository you will deploy |
 | OUTPUT    | The name of a directory to put your output   |
 
-### Build Script as ConfigMap resource
+### Build Script and Job Script as ConfigMap resource
 
-You can also define a build script as ConfigMap resource.
+You can also define a build script and job script as ConfigMap resource.
 
 Prepare a build script like bellow:
 
@@ -114,6 +120,8 @@ spec:
   repoURL: https://github.com/zoetrope/honkit-sample.git
   branch: main
 ```
+
+You can setting `jobScript` by above procedure
 
 ### Build Images
 
