@@ -61,7 +61,7 @@ type WebSiteSpec struct {
 
 	// JobScript is A script to execute in Job once after build
 	// +optional
-	JobScript DataSource `json:"jobScript"`
+	JobScript *DataSource `json:"jobScript"`
 }
 
 // SecretKey represents the name and key of a secret resource.
