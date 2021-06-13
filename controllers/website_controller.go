@@ -41,7 +41,7 @@ const (
 	NginxPort         = 8080
 )
 
-func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime.Scheme, nginxContainerImage string, repoCheckerContainerImage string, operatorNamespace string) *WebSiteReconciler {
+func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime.Scheme, nginxContainerImage string, repoCheckerContainerImage string, operatorNamespace string, revCli RevisionClient) *WebSiteReconciler {
 	return &WebSiteReconciler{
 		client:                    client,
 		log:                       log,
@@ -49,6 +49,7 @@ func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime
 		nginxContainerImage:       nginxContainerImage,
 		repoCheckerContainerImage: repoCheckerContainerImage,
 		operatorNamespace:         operatorNamespace,
+		revisionClient:            revCli,
 	}
 }
 
@@ -60,6 +61,7 @@ type WebSiteReconciler struct {
 	nginxContainerImage       string
 	repoCheckerContainerImage string
 	operatorNamespace         string
+	revisionClient            RevisionClient
 }
 
 //+kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites,verbs=get;list;watch;create;update;patch;delete
@@ -139,7 +141,7 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	revision, err := getLatestRevision(ctx, webSite)
+	revision, err := r.revisionClient.GetLatestRevision(ctx, webSite)
 	if err != nil {
 		log.Error(err, "failed to get revision from RepoChecker")
 		return isUpdatedAtLeastOnce, "", err
@@ -675,11 +677,15 @@ func (r *WebSiteReconciler) reconcileExtraResources(ctx context.Context, webSite
 	isUpdated := false
 
 	for _, res := range webSite.Spec.ExtraResources {
-		obj, err := r.extraResource(ctx, webSite, &res)
+		extra, err := r.extraResource(ctx, webSite, &res)
 		if err != nil {
 			return false, err
 		}
+		obj := extra.DeepCopy()
 		op, err := ctrl.CreateOrUpdate(ctx, r.client, obj, func() error {
+			if !equality.Semantic.DeepDerivative(extra, obj) {
+				obj = extra.DeepCopy()
+			}
 			return ctrl.SetControllerReference(webSite, obj, r.scheme)
 		})
 		if err != nil {
@@ -762,7 +768,7 @@ func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	ch := make(chan event.GenericEvent)
-	watcher := newRevisionWatcher(mgr.GetClient(), mgr.GetLogger().WithName("RevisionWatcher"), ch, 1*time.Minute)
+	watcher := newRevisionWatcher(mgr.GetClient(), mgr.GetLogger().WithName("RevisionWatcher"), ch, 1*time.Minute, r.revisionClient)
 	err = mgr.Add(watcher)
 	if err != nil {
 		return err

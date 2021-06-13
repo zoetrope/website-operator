@@ -57,6 +57,7 @@ func subMain() error {
 		config.nginxContainerImage,
 		config.repoCheckerContainerImage,
 		os.Getenv("POD_NAMESPACE"),
+		&controllers.RepoCheckerClient{},
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "WebSite")
 		return err

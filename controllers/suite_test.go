@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
+
+	corev1 "k8s.io/api/core/v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -27,7 +30,6 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
-var reconciler *WebSiteReconciler
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -63,14 +65,35 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
-	reconciler = NewWebSiteReconciler(
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: sch,
+	})
+	Expect(err).NotTo(HaveOccurred())
+	err = NewWebSiteReconciler(
 		k8sClient,
 		ctrl.Log.WithName("controllers").WithName("WebSite"),
 		sch,
 		website.DefaultNginxContainerImage,
 		website.DefaultRepoCheckerContainerImage,
-		"default",
-	)
+		"website-operator-system",
+		&mockRevisionClient{"rev1"},
+	).SetupWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	go func() {
+		err = mgr.Start(ctrl.SetupSignalHandler())
+		Expect(err).NotTo(HaveOccurred())
+	}()
+
+	ns := &corev1.Namespace{}
+	ns.Name = "website-operator-system"
+	err = k8sClient.Create(context.Background(), ns)
+	Expect(err).NotTo(HaveOccurred())
+
+	ns = &corev1.Namespace{}
+	ns.Name = "test"
+	err = k8sClient.Create(context.Background(), ns)
+	Expect(err).NotTo(HaveOccurred())
 
 }, 60)
 
@@ -79,3 +102,11 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+type mockRevisionClient struct {
+	rev string
+}
+
+func (c mockRevisionClient) GetLatestRevision(ctx context.Context, webSite *websitev1beta1.WebSite) (string, error) {
+	return c.rev, nil
+}

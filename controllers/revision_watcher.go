@@ -14,20 +14,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-func newRevisionWatcher(client client.Client, log logr.Logger, ch chan<- event.GenericEvent, interval time.Duration) manager.Runnable {
+func newRevisionWatcher(client client.Client, log logr.Logger, ch chan<- event.GenericEvent, interval time.Duration, revCli RevisionClient) manager.Runnable {
 	return &revisionWatcher{
-		client:   client,
-		log:      log,
-		channel:  ch,
-		interval: interval,
+		client:         client,
+		log:            log,
+		channel:        ch,
+		interval:       interval,
+		revisionClient: revCli,
 	}
 }
 
 type revisionWatcher struct {
-	client   client.Client
-	log      logr.Logger
-	channel  chan<- event.GenericEvent
-	interval time.Duration
+	client         client.Client
+	log            logr.Logger
+	channel        chan<- event.GenericEvent
+	interval       time.Duration
+	revisionClient RevisionClient
 }
 
 // Start implements Runnable.Start
@@ -55,7 +57,7 @@ func (w revisionWatcher) revisionChanged(ctx context.Context) error {
 	}
 
 	for _, site := range sites.Items {
-		latestRev, err := getLatestRevision(ctx, &site)
+		latestRev, err := w.revisionClient.GetLatestRevision(ctx, &site)
 		if err != nil {
 			w.log.Error(err, "failed to get latest revision")
 			continue

@@ -10,7 +10,14 @@ import (
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 )
 
-func getLatestRevision(ctx context.Context, webSite *websitev1beta1.WebSite) (string, error) {
+type RevisionClient interface {
+	GetLatestRevision(ctx context.Context, webSite *websitev1beta1.WebSite) (string, error)
+}
+
+type RepoCheckerClient struct {
+}
+
+func (c RepoCheckerClient) GetLatestRevision(ctx context.Context, webSite *websitev1beta1.WebSite) (string, error) {
 	repoCheckerHost := fmt.Sprintf("%s%s.%s.svc.cluster.local", webSite.Name, RepoCheckerSuffix, webSite.Namespace)
 	req, err := http.NewRequestWithContext(
 		ctx,
