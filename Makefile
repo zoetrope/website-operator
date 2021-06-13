@@ -2,7 +2,7 @@ include common.mk
 
 SHELL := /bin/bash
 TAG ?= latest
-CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
+CRD_OPTIONS ?= "crd:crdVersions=v1"
 
 CONTROLLER_GEN := $(PWD)/bin/controller-gen
 KUBEBUILDER := $(PWD)/bin/kubebuilder
@@ -50,12 +50,9 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 .PHONY: test
-test: manifests generate ## fmt vet ## Run tests.
-	mkdir -p ${ENVTEST_ASSETS_DIR}
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.1/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+test: manifests generate setup-envtest ## fmt vet ## Run tests.
+	source <($(SETUP_ENVTEST) use -p env); go test -v -count 1 ./...
 
 ##@ Build
 
@@ -110,7 +107,7 @@ push-ui-image:
 	docker push ${REGISTRY}website-operator-ui:${TAG}
 
 .PHONY: setup
-setup: $(KUBEBUILDER) $(CONTROLLER_GEN)
+setup: $(KUBEBUILDER) $(CONTROLLER_GEN) setup-envtest
 
 $(KUBEBUILDER):
 	mkdir -p bin
@@ -123,8 +120,14 @@ $(CONTROLLER_GEN):
 
 $(KUSTOMIZE):
 	mkdir -p bin
-	curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VERSION)/kustomize_v$(KUSTOMIZE_VERSION)_linux_amd64.tar.gz | tar xzf - > kustomize
+	curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VERSION)/kustomize_v$(KUSTOMIZE_VERSION)_$(GOOS)_$(GOARCH).tar.gz | tar xzf - > kustomize
 	mv kustomize $(KUSTOMIZE)
+
+SETUP_ENVTEST := $(shell pwd)/bin/setup-envtest
+.PHONY: setup-envtest
+setup-envtest: ## Download setup-envtest locally if necessary
+	# see https://github.com/kubernetes-sigs/controller-runtime/tree/master/tools/setup-envtest
+	GOBIN=$(shell pwd)/bin go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
 .PHONY: clean
 clean:

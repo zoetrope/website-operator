@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -33,6 +34,7 @@ var _ = Describe("WebSite controller", func() {
 			err := k8sClient.Delete(ctx, &svc)
 			Expect(err).NotTo(HaveOccurred())
 		}
+		time.Sleep(100 * time.Millisecond)
 	})
 
 	Context("BuildScript", func() {
