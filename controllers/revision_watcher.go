@@ -67,7 +67,7 @@ func (w revisionWatcher) revisionChanged(ctx context.Context) error {
 		}
 		w.log.Info("revisionChanged", "currentRevision", site.Status.Revision, "latestRevision", latestRev)
 		w.channel <- event.GenericEvent{
-			Object: &site,
+			Object: site.DeepCopy(),
 		}
 	}
 	return nil
