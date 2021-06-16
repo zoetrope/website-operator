@@ -52,7 +52,7 @@ vet: ## Run go vet against code.
 
 .PHONY: test
 test: manifests generate setup-envtest ## fmt vet ## Run tests.
-	source <($(SETUP_ENVTEST) use -p env); go test -v -count 1 ./...
+	source <($(SETUP_ENVTEST) use -p env); go test -v -count 1 ./controllers -ginkgo.progress -ginkgo.v -ginkgo.failFast
 
 ##@ Build
 

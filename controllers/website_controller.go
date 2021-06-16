@@ -788,7 +788,10 @@ func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *web
 	log := r.log.WithValues("website", webSite.Name)
 
 	job := &batchv1.Job{}
+	job.SetNamespace(webSite.Namespace)
+	job.SetName(webSite.Name)
 	template := corev1.PodTemplateSpec{}
+	template.Spec.RestartPolicy = corev1.RestartPolicyNever
 	template.Spec.Volumes = append(template.Spec.Volumes,
 		corev1.Volume{
 			Name: "log",
@@ -820,6 +823,7 @@ func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *web
 			},
 		},
 	)
+
 	if webSite.Spec.DeployKeySecretName != nil {
 		template.Spec.Volumes = append(template.Spec.Volumes,
 			corev1.Volume{
@@ -849,10 +853,6 @@ func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *web
 				Name:      "job-script",
 			},
 			{
-				MountPath: "/data",
-				Name:      "data",
-			},
-			{
 				MountPath: "/tmp",
 				Name:      "tmp",
 			},
@@ -874,6 +874,22 @@ func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *web
 			Name:      "deploy-key",
 		})
 	}
+	for _, secret := range webSite.Spec.BuildSecrets {
+		buildContainer.Env = append(buildContainer.Env, corev1.EnvVar{
+			Name: secret.Key,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secret.Name,
+					},
+					Key: secret.Key,
+				},
+			},
+		})
+	}
+	for _, secret := range webSite.Spec.ImagePullSecrets {
+		template.Spec.ImagePullSecrets = append(template.Spec.ImagePullSecrets, secret)
+	}
 	template.Spec.Containers = append(template.Spec.Containers, buildContainer)
 
 	err := r.client.Get(ctx, client.ObjectKey{Namespace: job.Namespace, Name: job.Name}, job)
@@ -884,7 +900,8 @@ func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *web
 		if equality.Semantic.DeepDerivative(template, job.Spec.Template) {
 			return false, nil
 		}
-		err = r.client.Delete(ctx, job, &client.DeleteOptions{})
+		propergationPolicy := metav1.DeletePropagationBackground
+		err = r.client.Delete(ctx, job, &client.DeleteOptions{PropagationPolicy: &propergationPolicy})
 		if err != nil {
 			return false, err
 		}
@@ -907,6 +924,7 @@ func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *web
 		return false, err
 	}
 
+	log.Info("reconcile Job for Jobscript successfully")
 	return true, nil
 }
 

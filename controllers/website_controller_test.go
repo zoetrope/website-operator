@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -9,6 +10,7 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -20,11 +22,43 @@ var _ = Describe("WebSite controller", func() {
 	ctx := context.Background()
 
 	BeforeEach(func() {
+		deletepropergationPolicy := metav1.DeletePropagationBackground
 		err := k8sClient.DeleteAllOf(ctx, &websitev1beta1.WebSite{}, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
+		websiteList := &websitev1beta1.WebSiteList{}
+		Eventually(func() (int, error) {
+			err = k8sClient.List(ctx, websiteList, client.InNamespace("test"))
+			return len(websiteList.Items), err
+		}, 60, 1).Should(Equal(0))
+		Expect(err).NotTo(HaveOccurred())
+
 		err = k8sClient.DeleteAllOf(ctx, &corev1.ConfigMap{}, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
-		err = k8sClient.DeleteAllOf(ctx, &appsv1.Deployment{}, client.InNamespace("test"))
+		configMapList := &corev1.ConfigMapList{}
+		Eventually(func() (int, error) {
+			err = k8sClient.List(ctx, configMapList, client.InNamespace("test"))
+			return len(configMapList.Items), err
+		}, 60, 1).Should(Equal(0))
+		Expect(err).NotTo(HaveOccurred())
+
+		err = k8sClient.DeleteAllOf(ctx, &appsv1.Deployment{}, client.InNamespace("test"), client.PropagationPolicy(deletepropergationPolicy))
+		Expect(err).NotTo(HaveOccurred())
+		deploymentList := &appsv1.DeploymentList{}
+		err = k8sClient.List(ctx, deploymentList, client.InNamespace("test"))
+		Eventually(func() (int, error) {
+			err = k8sClient.List(ctx, deploymentList, client.InNamespace("test"))
+			return len(deploymentList.Items), err
+		}, 60, 1).Should(Equal(0))
+		Expect(err).NotTo(HaveOccurred())
+
+		err = k8sClient.DeleteAllOf(ctx, &batchv1.Job{}, client.InNamespace("test"), client.PropagationPolicy(deletepropergationPolicy))
+		Expect(err).NotTo(HaveOccurred())
+		jobList := &batchv1.JobList{}
+		err = k8sClient.List(ctx, jobList, client.InNamespace("test"))
+		Eventually(func() (int, error) {
+			err = k8sClient.List(ctx, jobList, client.InNamespace("test"))
+			return len(jobList.Items), err
+		}, 60, 1).Should(Equal(0))
 		Expect(err).NotTo(HaveOccurred())
 
 		svcs := &corev1.ServiceList{}
@@ -339,6 +373,126 @@ spec:
 			}).Should(Succeed())
 		})
 	})
+
+	Context("JobScript", func() {
+		It("should create jobScript job", func() {
+			site := newWebSite().withRawBuildScript().withRawJobScript().build()
+			err := k8sClient.Create(ctx, site)
+			Expect(err).NotTo(HaveOccurred())
+
+			job := batchv1.Job{}
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &job)
+			}).Should(Succeed())
+
+			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Annotations).Should(HaveLen(0))
+			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
+			Expect(job.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("job-script")})))
+			Expect(job.Spec.Template.Spec.Volumes).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
+		})
+
+		It("should create jobscript job with deploy key", func() {
+			site := newWebSite().withRawBuildScript().withDeployKey().withRawJobScript().build()
+			err := k8sClient.Create(ctx, site)
+			Expect(err).NotTo(HaveOccurred())
+
+			job := batchv1.Job{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &job)
+			}).Should(Succeed())
+
+			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Annotations).Should(HaveLen(0))
+			Expect(job.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
+			Expect(job.Spec.Template.Spec.Containers[0].VolumeMounts).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("job-script")})))
+			Expect(job.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
+		})
+
+		It("should create jobscirpt job with Image Secrets", func() {
+			site := newWebSite().withRawBuildScript().withImagePullSecrets().withRawJobScript().build()
+			err := k8sClient.Create(ctx, site)
+			Expect(err).NotTo(HaveOccurred())
+
+			job := batchv1.Job{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &job)
+			}).Should(Succeed())
+
+			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1)) // 	Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Annotations).Should(HaveLen(0))
+			Expect(job.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
+			Expect(job.Spec.Template.Spec.Containers[0].Env).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("VAR_KEY")})))
+			Expect(job.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("job-script")})))
+			Expect(job.Spec.Template.Spec.Volumes).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.ImagePullSecrets).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("myimagepullsecret")})))
+		})
+
+		It("should create jobscript job with Build Secrets", func() {
+			site := newWebSite().withRawBuildScript().withBuildSecrets().withRawJobScript().build()
+			err := k8sClient.Create(ctx, site)
+			Expect(err).NotTo(HaveOccurred())
+
+			job := batchv1.Job{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &job)
+			}).Should(Succeed())
+
+			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1)) // 	Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Annotations).Should(HaveLen(0))
+			Expect(job.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
+			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("VAR_KEY"), "ValueFrom": Equal(&corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "mybuildsecret"}, Key: "VAR_KEY"}})})))
+			Expect(job.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("job-script")})))
+			Expect(job.Spec.Template.Spec.Volumes).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
+		})
+
+		It("should recreate jobscript job when job exists and revision is updated ", func() {
+			site := newWebSite().withRawBuildScript().withRawJobScript().build()
+			err := k8sClient.Create(ctx, site)
+			Expect(err).NotTo(HaveOccurred())
+
+			job := batchv1.Job{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &job)
+			}).Should(Succeed())
+
+			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1)) // 	Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Annotations).Should(HaveLen(0))
+			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
+			Expect(job.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("job-script")})))
+			Expect(job.Spec.Template.Spec.Volumes).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(job.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
+
+			mockClient.rev = "rev2"
+			newJob := batchv1.Job{}
+			Eventually(func() (bool, error) {
+				err := k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &newJob)
+				if err != nil {
+					return false, fmt.Errorf("error %v", err)
+				}
+				return newJob.ObjectMeta.UID != job.ObjectMeta.UID, nil
+			}, 30).Should(BeTrue())
+
+			Expect(newJob.Spec.Template.Spec.Containers).Should(HaveLen(1)) // 	Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(newJob.Spec.Template.Annotations).Should(HaveLen(0))
+			Expect(newJob.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev2")})))
+			Expect(newJob.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("job-script")})))
+			Expect(newJob.Spec.Template.Spec.Volumes).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(newJob.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(newJob.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
+		})
+	})
 })
 
 type websiteBuilder struct {
@@ -379,6 +533,28 @@ cp -r _book/* $OUTPUT/
 `
 	b.website.Spec.BuildScript = websitev1beta1.DataSource{
 		RawData: &buildScript,
+	}
+
+	return b
+}
+
+func (b *websiteBuilder) withRawJobScript() *websiteBuilder {
+	jobScript := `    #!/bin/bash -ex
+	cd $HOME
+	rm -rf $REPO_NAME
+	git clone $REPO_URL
+	cd $REPO_NAME
+	git checkout $REVISION
+	sed -i -e "/host/c\      \"host\": \"http://${RESOURCE_NAME}.${RESOURCE_NAMESPACE}.example.com/es\"," book.js
+	sed -i -e "/index/c\      \"index\": \"${RESOURCE_NAME}-${REVISION}\"," book.js
+	npm install
+	npm run build
+	curl -X DELETE ${ELASTIC_HOST}/${RESOURCE_NAME}-${REVISION}
+	curl -X PUT ${ELASTIC_HOST}/${RESOURCE_NAME}-${REVISION} -H 'Content-Type: application/json' -d @mappings.json
+	curl -X POST ${ELASTIC_HOST}/${RESOURCE_NAME}-${REVISION}/_bulk -H 'Content-Type: application/json' --data-binary @_book/search_index.json
+`
+	b.website.Spec.JobScript = &websitev1beta1.DataSource{
+		RawData: &jobScript,
 	}
 
 	return b

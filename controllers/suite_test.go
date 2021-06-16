@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/zoetrope/website-operator"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
+	"go.uber.org/zap/zapcore"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -27,6 +28,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var mockClient mockRevisionClient
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -35,7 +37,7 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.StacktraceLevel(zapcore.DPanicLevel), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -64,6 +66,7 @@ var _ = BeforeSuite(func() {
 		Scheme: sch,
 	})
 	Expect(err).NotTo(HaveOccurred())
+	mockClient = mockRevisionClient{"rev1"}
 	err = NewWebSiteReconciler(
 		k8sClient,
 		ctrl.Log.WithName("controllers").WithName("WebSite"),
@@ -71,7 +74,7 @@ var _ = BeforeSuite(func() {
 		website.DefaultNginxContainerImage,
 		website.DefaultRepoCheckerContainerImage,
 		"website-operator-system",
-		&mockRevisionClient{"rev1"},
+		&mockClient,
 	).SetupWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
