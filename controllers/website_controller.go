@@ -41,8 +41,7 @@ const (
 	RepoCheckerSuffix = "-repo-checker"
 	BuildScriptSuffix = "-build-script"
 	JobScriptSuffix   = "-job-script"
-	// TODO:refactor
-	NginxPort = 8080
+	NginxPort         = 8080
 )
 
 func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime.Scheme, nginxContainerImage string, repoCheckerContainerImage string, operatorNamespace string, revCli RevisionClient) *WebSiteReconciler {
@@ -225,7 +224,7 @@ func (r *WebSiteReconciler) reconcileScriptConfigMap(ctx context.Context, webSit
 	} else if required {
 		return false, errors.New("buildScript should not be empty")
 	} else {
-		return false, nil // TODO: これでうまくいくか確認
+		return false, nil
 	}
 
 	cm := &corev1.ConfigMap{}
