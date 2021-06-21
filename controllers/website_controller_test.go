@@ -29,40 +29,12 @@ var _ = Describe("WebSite controller", func() {
 		deletepropergationPolicy := metav1.DeletePropagationBackground
 		err := k8sClient.DeleteAllOf(ctx, &websitev1beta1.WebSite{}, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
-		websiteList := &websitev1beta1.WebSiteList{}
-		Eventually(func() (int, error) {
-			err = k8sClient.List(ctx, websiteList, client.InNamespace("test"))
-			return len(websiteList.Items), err
-		}, 60, 1).Should(Equal(0))
-		Expect(err).NotTo(HaveOccurred())
-
 		err = k8sClient.DeleteAllOf(ctx, &corev1.ConfigMap{}, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
-		configMapList := &corev1.ConfigMapList{}
-		Eventually(func() (int, error) {
-			err = k8sClient.List(ctx, configMapList, client.InNamespace("test"))
-			return len(configMapList.Items), err
-		}, 60, 1).Should(Equal(0))
-		Expect(err).NotTo(HaveOccurred())
-
 		err = k8sClient.DeleteAllOf(ctx, &appsv1.Deployment{}, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
-		deploymentList := &appsv1.DeploymentList{}
-		Eventually(func() (int, error) {
-			err = k8sClient.List(ctx, deploymentList, client.InNamespace("test"))
-			return len(deploymentList.Items), err
-		}, 60, 1).Should(Equal(0))
-		Expect(err).NotTo(HaveOccurred())
-
 		err = k8sClient.DeleteAllOf(ctx, &batchv1.Job{}, client.InNamespace("test"), client.PropagationPolicy(deletepropergationPolicy))
 		Expect(err).NotTo(HaveOccurred())
-		jobList := &batchv1.JobList{}
-		Eventually(func() (int, error) {
-			err = k8sClient.List(ctx, jobList, client.InNamespace("test"))
-			return len(jobList.Items), err
-		}, 60, 1).Should(Equal(0))
-		Expect(err).NotTo(HaveOccurred())
-
 		svcs := &corev1.ServiceList{}
 		err = k8sClient.List(ctx, svcs, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
@@ -415,7 +387,6 @@ spec:
 			Expect(err).NotTo(HaveOccurred())
 
 			job := batchv1.Job{}
-
 			Eventually(func() error {
 				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &job)
 			}).Should(Succeed())
