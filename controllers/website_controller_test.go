@@ -8,18 +8,22 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	"github.com/zoetrope/website-operator"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("WebSite controller", func() {
 
 	ctx := context.Background()
+	var stopFunc func()
+	var mockClient mockRevisionClient
 
 	BeforeEach(func() {
 		deletepropergationPolicy := metav1.DeletePropagationBackground
@@ -41,10 +45,9 @@ var _ = Describe("WebSite controller", func() {
 		}, 60, 1).Should(Equal(0))
 		Expect(err).NotTo(HaveOccurred())
 
-		err = k8sClient.DeleteAllOf(ctx, &appsv1.Deployment{}, client.InNamespace("test"), client.PropagationPolicy(deletepropergationPolicy))
+		err = k8sClient.DeleteAllOf(ctx, &appsv1.Deployment{}, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
 		deploymentList := &appsv1.DeploymentList{}
-		err = k8sClient.List(ctx, deploymentList, client.InNamespace("test"))
 		Eventually(func() (int, error) {
 			err = k8sClient.List(ctx, deploymentList, client.InNamespace("test"))
 			return len(deploymentList.Items), err
@@ -54,7 +57,6 @@ var _ = Describe("WebSite controller", func() {
 		err = k8sClient.DeleteAllOf(ctx, &batchv1.Job{}, client.InNamespace("test"), client.PropagationPolicy(deletepropergationPolicy))
 		Expect(err).NotTo(HaveOccurred())
 		jobList := &batchv1.JobList{}
-		err = k8sClient.List(ctx, jobList, client.InNamespace("test"))
 		Eventually(func() (int, error) {
 			err = k8sClient.List(ctx, jobList, client.InNamespace("test"))
 			return len(jobList.Items), err
@@ -68,6 +70,38 @@ var _ = Describe("WebSite controller", func() {
 			err := k8sClient.Delete(ctx, &svc)
 			Expect(err).NotTo(HaveOccurred())
 		}
+		time.Sleep(100 * time.Millisecond)
+
+		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+			Scheme: scheme,
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		mockClient = mockRevisionClient{"rev1"}
+		err = NewWebSiteReconciler(
+			k8sClient,
+			ctrl.Log.WithName("controllers").WithName("WebSite"),
+			scheme,
+			website.DefaultNginxContainerImage,
+			website.DefaultRepoCheckerContainerImage,
+			"website-operator-system",
+			&mockClient,
+		).SetupWithManager(mgr)
+		Expect(err).NotTo(HaveOccurred())
+
+		ctx, cancel := context.WithCancel(ctx)
+		stopFunc = cancel
+		go func() {
+			err := mgr.Start(ctx)
+			if err != nil {
+				panic(err)
+			}
+		}()
+		time.Sleep(100 * time.Millisecond)
+	})
+
+	AfterEach(func() {
+		stopFunc()
 		time.Sleep(100 * time.Millisecond)
 	})
 
