@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -37,6 +38,20 @@ func testWebSite(name string) {
 		}
 		return nil
 	}, 5*time.Minute).Should(Succeed())
+
+	if site.Spec.JobScript != nil {
+		job := &batchv1.Job{}
+		Eventually(func() error {
+			err := getResource("default", "job", name, "", job)
+			if err != nil {
+				return err
+			}
+			if job.Status.Succeeded != 1 {
+				return errors.New("should be ready")
+			}
+			return nil
+		}, 5*time.Minute).Should(Succeed())
+	}
 
 	req, err := http.NewRequest(http.MethodGet, "http://127.0.0.1", nil)
 	Expect(err).ShouldNot(HaveOccurred())

@@ -69,13 +69,15 @@ type WebSiteReconciler struct {
 
 //+kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=sebsite.zoetrope.github.io,resources=websites/finalizers,verbs=update
+//+kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=services/status,verbs=get
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
+//+kubebuilder:rbac:groups="batch",resources=jobs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="batch",resources=jobs/status,verbs=get
 
 func (r *WebSiteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("website", req.NamespacedName)
@@ -963,6 +965,7 @@ func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Service{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.ConfigMap{}).
+		Owns(&batchv1.Job{}).
 		Watches(&src, &handler.EnqueueRequestForObject{}).
 		Complete(r)
 }

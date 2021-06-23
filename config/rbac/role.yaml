@@ -61,11 +61,23 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - sebsite.zoetrope.github.io
+  - batch
   resources:
-  - websites/finalizers
+  - jobs
   verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
   - update
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - jobs/status
+  verbs:
+  - get
 - apiGroups:
   - website.zoetrope.github.io
   resources:
@@ -78,6 +90,12 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - website.zoetrope.github.io
+  resources:
+  - websites/finalizers
+  verbs:
+  - update
 - apiGroups:
   - website.zoetrope.github.io
   resources:

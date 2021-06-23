@@ -17,3 +17,6 @@ configMapGenerator:
     files:
       - httpproxy.tmpl
       - httpproxy-es.tmpl
+  - name: job-scripts
+    files:
+      - job-honkit.sh

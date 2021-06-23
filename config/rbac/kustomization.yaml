@@ -1,6 +1,6 @@
 resources:
-- manager_role.yaml
-- manager_role_binding.yaml
+- role.yaml
+- role_binding.yaml
 - leader_election_role.yaml
 - leader_election_role_binding.yaml
 - ui_role.yaml
