@@ -32,16 +32,16 @@ import (
 )
 
 const (
-	OperatorName           = "website-operator"
-	AppName                = "website"
-	ManagedByKey           = "app.kubernetes.io/managed-by"
-	AppNameKey             = "app.kubernetes.io/name"
-	InstanceKey            = "app.kubernetes.io/instance"
-	RepoCheckerPort        = 9090
-	RepoCheckerSuffix      = "-repo-checker"
-	BuildScriptSuffix      = "-build-script"
-	AfterBuildScriptSuffix = "-after-build-script"
-	NginxPort              = 8080
+	OperatorName         = "website-operator"
+	AppName              = "website"
+	ManagedByKey         = "app.kubernetes.io/managed-by"
+	AppNameKey           = "app.kubernetes.io/name"
+	InstanceKey          = "app.kubernetes.io/instance"
+	RepoCheckerPort      = 9090
+	RepoCheckerSuffix    = "-repo-checker"
+	BuildScriptName      = "build"
+	AfterBuildScriptName = "after-build"
+	NginxPort            = 8080
 )
 
 func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime.Scheme, nginxContainerImage string, repoCheckerContainerImage string, operatorNamespace string, revCli RevisionClient) *WebSiteReconciler {
@@ -130,14 +130,14 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 
 	isUpdatedAtLeastOnce := false
 
-	isUpdated, err := r.reconcileScriptConfigMap(ctx, webSite, &webSite.Spec.BuildScript, "build", true)
+	isUpdated, err := r.reconcileScriptConfigMap(ctx, webSite, &webSite.Spec.BuildScript, BuildScriptName, true)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
 		log.Error(err, "failed to create ConfigMap for build script")
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	isUpdated, err = r.reconcileScriptConfigMap(ctx, webSite, webSite.Spec.AfterBuildScript, "after-build", true)
+	isUpdated, err = r.reconcileScriptConfigMap(ctx, webSite, webSite.Spec.AfterBuildScript, AfterBuildScriptName, true)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
 		log.Error(err, "failed to create ConfigMap for after build script")
@@ -516,11 +516,11 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 			},
 		},
 		corev1.Volume{
-			Name: "build-script",
+			Name: BuildScriptName + "-script",
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: webSite.Name + BuildScriptSuffix,
+						Name: webSite.Name + "-" + BuildScriptName + "-script",
 					},
 					DefaultMode: pointer.Int32Ptr(0755),
 				},
@@ -587,7 +587,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 	buildContainer := corev1.Container{
 		Name:    "build",
 		Image:   webSite.Spec.BuildImage,
-		Command: []string{"/bin/bash", "-c", "/build/build.sh"},
+		Command: []string{"/bin/bash", "-c", "/build/" + BuildScriptName + ".sh"},
 		SecurityContext: &corev1.SecurityContext{
 			RunAsUser: pointer.Int64Ptr(10000),
 		},
@@ -598,7 +598,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 			},
 			{
 				MountPath: "/build",
-				Name:      "build-script",
+				Name:      BuildScriptName + "-script",
 			},
 			{
 				MountPath: "/data",
@@ -813,11 +813,11 @@ func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSi
 			},
 		},
 		corev1.Volume{
-			Name: "after-build-script",
+			Name: AfterBuildScriptName + "-script",
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: webSite.Name + AfterBuildScriptSuffix,
+						Name: webSite.Name + "-" + AfterBuildScriptName + "-script",
 					},
 					DefaultMode: pointer.Int32Ptr(0755),
 				},
@@ -844,14 +844,14 @@ func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSi
 	buildContainer := corev1.Container{
 		Name:    "job",
 		Image:   webSite.Spec.BuildImage,
-		Command: []string{"/bin/bash", "-c", "/after-build/after-build.sh"},
+		Command: []string{"/bin/bash", "-c", "/after-build/" + AfterBuildScriptName + ".sh"},
 		SecurityContext: &corev1.SecurityContext{
 			RunAsUser: pointer.Int64Ptr(10000),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				MountPath: "/after-build",
-				Name:      "after-build-script",
+				Name:      AfterBuildScriptName + "-script",
 			},
 			{
 				MountPath: "/tmp",
