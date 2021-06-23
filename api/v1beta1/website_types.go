@@ -59,9 +59,9 @@ type WebSiteSpec struct {
 	// +optional
 	ServiceTemplate *ServiceTemplate `json:"serviceTemplate,omitempty"`
 
-	// JobScript is A script to execute in Job once after build
+	// AfterBuildScript is A script to execute in Job once after build
 	// +optional
-	JobScript *DataSource `json:"jobScript"`
+	AfterBuildScript *DataSource `json:"afterBuildScript"`
 }
 
 // SecretKey represents the name and key of a secret resource.

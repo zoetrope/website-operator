@@ -220,8 +220,8 @@ func (in *WebSiteSpec) DeepCopyInto(out *WebSiteSpec) {
 		*out = new(ServiceTemplate)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.JobScript != nil {
-		in, out := &in.JobScript, &out.JobScript
+	if in.AfterBuildScript != nil {
+		in, out := &in.AfterBuildScript, &out.AfterBuildScript
 		*out = new(DataSource)
 		(*in).DeepCopyInto(*out)
 	}

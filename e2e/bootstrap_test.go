@@ -39,7 +39,7 @@ func testWebSite(name string) {
 		return nil
 	}, 5*time.Minute).Should(Succeed())
 
-	if site.Spec.JobScript != nil {
+	if site.Spec.AfterBuildScript != nil {
 		job := &batchv1.Job{}
 		Eventually(func() error {
 			err := getResource("default", "job", name, "", job)

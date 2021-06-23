@@ -32,16 +32,16 @@ import (
 )
 
 const (
-	OperatorName      = "website-operator"
-	AppName           = "website"
-	ManagedByKey      = "app.kubernetes.io/managed-by"
-	AppNameKey        = "app.kubernetes.io/name"
-	InstanceKey       = "app.kubernetes.io/instance"
-	RepoCheckerPort   = 9090
-	RepoCheckerSuffix = "-repo-checker"
-	BuildScriptSuffix = "-build-script"
-	JobScriptSuffix   = "-job-script"
-	NginxPort         = 8080
+	OperatorName           = "website-operator"
+	AppName                = "website"
+	ManagedByKey           = "app.kubernetes.io/managed-by"
+	AppNameKey             = "app.kubernetes.io/name"
+	InstanceKey            = "app.kubernetes.io/instance"
+	RepoCheckerPort        = 9090
+	RepoCheckerSuffix      = "-repo-checker"
+	BuildScriptSuffix      = "-build-script"
+	AfterBuildScriptSuffix = "-after-build-script"
+	NginxPort              = 8080
 )
 
 func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime.Scheme, nginxContainerImage string, repoCheckerContainerImage string, operatorNamespace string, revCli RevisionClient) *WebSiteReconciler {
@@ -137,10 +137,10 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	isUpdated, err = r.reconcileScriptConfigMap(ctx, webSite, webSite.Spec.JobScript, "job", true)
+	isUpdated, err = r.reconcileScriptConfigMap(ctx, webSite, webSite.Spec.AfterBuildScript, "after-build", true)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
-		log.Error(err, "failed to create ConfigMap for job script")
+		log.Error(err, "failed to create ConfigMap for after build script")
 		return isUpdatedAtLeastOnce, "", err
 	}
 
@@ -185,13 +185,13 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	isUpdated, err = r.reconcileJobScript(ctx, webSite, revision)
+	isUpdated, err = r.reconcileAfterBuildScript(ctx, webSite, revision)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err == errJobIsActive {
 		return isUpdatedAtLeastOnce, "", err
 	}
 	if err != nil {
-		log.Error(err, "failed to create Job for JobScript")
+		log.Error(err, "failed to create Job for AfterBuildScript")
 		return isUpdatedAtLeastOnce, "", err
 	}
 
@@ -781,8 +781,8 @@ func (r *WebSiteReconciler) extraResource(ctx context.Context, webSite *websitev
 
 var errJobIsActive = errors.New("selected job is active")
 
-func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (bool, error) {
-	if webSite.Spec.JobScript == nil {
+func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (bool, error) {
+	if webSite.Spec.AfterBuildScript == nil {
 		return false, nil
 	}
 
@@ -813,11 +813,11 @@ func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *web
 			},
 		},
 		corev1.Volume{
-			Name: "job-script",
+			Name: "after-build-script",
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: webSite.Name + JobScriptSuffix,
+						Name: webSite.Name + AfterBuildScriptSuffix,
 					},
 					DefaultMode: pointer.Int32Ptr(0755),
 				},
@@ -844,14 +844,14 @@ func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *web
 	buildContainer := corev1.Container{
 		Name:    "job",
 		Image:   webSite.Spec.BuildImage,
-		Command: []string{"/bin/bash", "-c", "/job/job.sh"},
+		Command: []string{"/bin/bash", "-c", "/after-build/after-build.sh"},
 		SecurityContext: &corev1.SecurityContext{
 			RunAsUser: pointer.Int64Ptr(10000),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
-				MountPath: "/job",
-				Name:      "job-script",
+				MountPath: "/after-build",
+				Name:      "after-build-script",
 			},
 			{
 				MountPath: "/tmp",
@@ -921,11 +921,11 @@ func (r *WebSiteReconciler) reconcileJobScript(ctx context.Context, webSite *web
 
 	err = r.client.Create(ctx, newJob, &client.CreateOptions{})
 	if err != nil {
-		log.Error(err, "unable to reconcile job script job")
+		log.Error(err, "unable to reconcile after build script job")
 		return false, err
 	}
 
-	log.Info("reconcile Job for Jobscript successfully")
+	log.Info("reconcile Job for AfterBuildScript successfully")
 	return true, nil
 }
 

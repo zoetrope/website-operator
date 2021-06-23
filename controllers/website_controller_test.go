@@ -380,9 +380,9 @@ spec:
 		})
 	})
 
-	Context("JobScript", func() {
-		It("should create jobScript job", func() {
-			site := newWebSite().withRawBuildScript().withRawJobScript().build()
+	Context("AfterBuildcript", func() {
+		It("should create afterBuildScript job", func() {
+			site := newWebSite().withRawBuildScript().withAfterBuildScript().build()
 			err := k8sClient.Create(ctx, site)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -401,8 +401,8 @@ spec:
 			Expect(job.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
 		})
 
-		It("should create jobscript job with deploy key", func() {
-			site := newWebSite().withRawBuildScript().withDeployKey().withRawJobScript().build()
+		It("should create afterBuildscript job with deploy key", func() {
+			site := newWebSite().withRawBuildScript().withDeployKey().withAfterBuildScript().build()
 			err := k8sClient.Create(ctx, site)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -421,8 +421,8 @@ spec:
 			Expect(job.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
 		})
 
-		It("should create jobscirpt job with Image Secrets", func() {
-			site := newWebSite().withRawBuildScript().withImagePullSecrets().withRawJobScript().build()
+		It("should create afterBuildScirpt job with Image Secrets", func() {
+			site := newWebSite().withRawBuildScript().withImagePullSecrets().withAfterBuildScript().build()
 			err := k8sClient.Create(ctx, site)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -441,8 +441,8 @@ spec:
 			Expect(job.Spec.Template.Spec.ImagePullSecrets).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("myimagepullsecret")})))
 		})
 
-		It("should create jobscript job with Build Secrets", func() {
-			site := newWebSite().withRawBuildScript().withBuildSecrets().withRawJobScript().build()
+		It("should create afterBuildscript job with Build Secrets", func() {
+			site := newWebSite().withRawBuildScript().withBuildSecrets().withAfterBuildScript().build()
 			err := k8sClient.Create(ctx, site)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -461,8 +461,8 @@ spec:
 			Expect(job.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
 		})
 
-		It("should recreate jobscript job when job exists and revision is updated ", func() {
-			site := newWebSite().withRawBuildScript().withRawJobScript().build()
+		It("should recreate afterBuildscript job when job exists and revision is updated ", func() {
+			site := newWebSite().withRawBuildScript().withAfterBuildScript().build()
 			err := k8sClient.Create(ctx, site)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -543,8 +543,8 @@ cp -r _book/* $OUTPUT/
 	return b
 }
 
-func (b *websiteBuilder) withRawJobScript() *websiteBuilder {
-	jobScript := `    #!/bin/bash -ex
+func (b *websiteBuilder) withAfterBuildScript() *websiteBuilder {
+	afterBuildScript := `    #!/bin/bash -ex
 	cd $HOME
 	rm -rf $REPO_NAME
 	git clone $REPO_URL
@@ -558,8 +558,8 @@ func (b *websiteBuilder) withRawJobScript() *websiteBuilder {
 	curl -X PUT ${ELASTIC_HOST}/${RESOURCE_NAME}-${REVISION} -H 'Content-Type: application/json' -d @mappings.json
 	curl -X POST ${ELASTIC_HOST}/${RESOURCE_NAME}-${REVISION}/_bulk -H 'Content-Type: application/json' --data-binary @_book/search_index.json
 `
-	b.website.Spec.JobScript = &websitev1beta1.DataSource{
-		RawData: &jobScript,
+	b.website.Spec.AfterBuildScript = &websitev1beta1.DataSource{
+		RawData: &afterBuildScript,
 	}
 
 	return b

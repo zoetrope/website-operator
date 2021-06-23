@@ -44,7 +44,7 @@ spec:
         npm run build
         rm -rf $OUTPUT/*
         cp -r _book/* $OUTPUT/
-  jobScript: 
+  afterBuildScript: 
     rawData: |
         #!/bin/bash -ex
         curl -k -X POST https://elasticsearch:9200/test/_bulk -H 'Content-Type: application/json'  --data-binary @index.json
@@ -64,7 +64,7 @@ You can specify the following fields:
 | deployKeySecretName | `false`  | The name of a secret resource that holds a deploy key to access your private repository |
 | extraResources      | `false`  | Any extra resources you want to deploy                                                  |
 | replicas            | `false`  | The number of nginx instances                                                           |
-| jobScript           | `false`  | A script to execute in Job once after build (ex. registering search index)              |
+| afterBuildScript    | `false`  | A script to execute in Job once after build (ex. registering search index)              |
 
 In the build script, you have to copy your built output to `$OUTPUT` directory.
 
@@ -78,9 +78,9 @@ The following environment variables are available in the build script:
 | REVISION  | The revision of a repository you will deploy |
 | OUTPUT    | The name of a directory to put your output   |
 
-### Build Script and Job Script as ConfigMap resource
+### Build Script and After Build Script as ConfigMap resource
 
-You can also define a build script and job script as ConfigMap resource.
+You can also define a build script and after build script as ConfigMap resource.
 
 Prepare a build script like bellow:
 
@@ -121,7 +121,7 @@ spec:
   branch: main
 ```
 
-You can setting `jobScript` by above procedure
+You can setting `afterBuildScript` by above procedure
 
 ### Build Images
 
