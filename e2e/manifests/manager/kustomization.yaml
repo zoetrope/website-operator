@@ -10,13 +10,13 @@ configMapGenerator:
   - name: build-scripts
     files:
       - build-honkit.sh
-      - build-honkit-es.sh
       - build-mkdocs.sh
       - build-gatsby.sh
   - name: httpproxy
     files:
       - httpproxy.tmpl
       - httpproxy-es.tmpl
-  - name: after-build-script
+  - name: after-build-scripts
     files:
       - after-build-honkit.sh
+      - build-honkit-es.sh

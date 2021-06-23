@@ -8,11 +8,15 @@ spec:
   buildScript:
     configMap:
       name: build-scripts
-      key: build-honkit-es.sh
+      key: build-honkit.sh
   buildSecrets:
     - name: build-secret
       key: ELASTIC_HOST
   repoURL: https://github.com/zoetrope/honkit-sample.git
+  afterBuildScript:
+    configMap:
+      name: after-build-scripts
+      key: create-honkit-es-index.sh
   branch: main
   extraResources:
     - configMap:

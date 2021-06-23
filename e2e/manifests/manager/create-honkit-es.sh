@@ -14,7 +14,3 @@ npm run build
 curl -X DELETE ${ELASTIC_HOST}/${RESOURCE_NAME}-${REVISION}
 curl -X PUT ${ELASTIC_HOST}/${RESOURCE_NAME}-${REVISION} -H 'Content-Type: application/json' -d @mappings.json
 curl -X POST ${ELASTIC_HOST}/${RESOURCE_NAME}-${REVISION}/_bulk -H 'Content-Type: application/json' --data-binary @_book/search_index.json
-
-rm -rf $OUTPUT/*
-cp -r _book/* $OUTPUT/
-cp -r assets/* $OUTPUT/assets/

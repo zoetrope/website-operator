@@ -13,7 +13,7 @@ spec:
   branch: main
   afterBuildScript:
     configMap:
-      name: after-build-script
+      name: after-build-scripts
       key: after-build-honkit.sh
   extraResources:
     - configMap:
