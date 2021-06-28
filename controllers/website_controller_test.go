@@ -26,14 +26,13 @@ var _ = Describe("WebSite controller", func() {
 	var mockClient mockRevisionClient
 
 	BeforeEach(func() {
-		deletepropergationPolicy := metav1.DeletePropagationBackground
 		err := k8sClient.DeleteAllOf(ctx, &websitev1beta1.WebSite{}, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.DeleteAllOf(ctx, &corev1.ConfigMap{}, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.DeleteAllOf(ctx, &appsv1.Deployment{}, client.InNamespace("test"))
 		Expect(err).NotTo(HaveOccurred())
-		err = k8sClient.DeleteAllOf(ctx, &batchv1.Job{}, client.InNamespace("test"), client.PropagationPolicy(deletepropergationPolicy))
+		err = k8sClient.DeleteAllOf(ctx, &batchv1.Job{}, client.InNamespace("test"), client.PropagationPolicy(metav1.DeletePropagationBackground))
 		Expect(err).NotTo(HaveOccurred())
 		svcs := &corev1.ServiceList{}
 		err = k8sClient.List(ctx, svcs, client.InNamespace("test"))
@@ -431,7 +430,8 @@ spec:
 				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &job)
 			}).Should(Succeed())
 
-			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1)) // 	Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
 			Expect(job.Spec.Template.Annotations).Should(HaveLen(0))
 			Expect(job.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
 			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
@@ -451,7 +451,8 @@ spec:
 				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &job)
 			}).Should(Succeed())
 
-			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1)) // 	Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
 			Expect(job.Spec.Template.Annotations).Should(HaveLen(0))
 			Expect(job.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
 			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
@@ -471,7 +472,8 @@ spec:
 				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &job)
 			}).Should(Succeed())
 
-			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1)) // 	Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
 			Expect(job.Spec.Template.Annotations).Should(HaveLen(0))
 			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
 			Expect(job.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("after-build-script")})))
@@ -489,7 +491,8 @@ spec:
 				return newJob.ObjectMeta.UID != job.ObjectMeta.UID, nil
 			}, 30).Should(BeTrue())
 
-			Expect(newJob.Spec.Template.Spec.Containers).Should(HaveLen(1)) // 	Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(newJob.Spec.Template.Spec.Containers).Should(HaveLen(1))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
 			Expect(newJob.Spec.Template.Annotations).Should(HaveLen(0))
 			Expect(newJob.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev2")})))
 			Expect(newJob.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("after-build-script")})))
