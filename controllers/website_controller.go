@@ -779,7 +779,7 @@ func (r *WebSiteReconciler) extraResource(ctx context.Context, webSite *websitev
 	return &obj, nil
 }
 
-var errJobIsActive = errors.New("selected job is active")
+var errJobIsActive = errors.New("job is active")
 
 func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (bool, error) {
 	if webSite.Spec.AfterBuildScript == nil {
