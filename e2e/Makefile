@@ -1,19 +1,21 @@
 include ../common.mk
 
-KUBECTL := $(PWD)/bin/kubectl
-KUSTOMIZE := $(PWD)/bin/kustomize
+BINDIR = $(PWD)/bin
+KIND := $(BINDIR)/kind
+KUBECTL := $(BINDIR)/kubectl
+KUSTOMIZE := $(BINDIR)/kustomize
 KIND_CLUSTER_NAME=website-e2e
 
 GO_FILES := $(shell find .. -path ../vendor -prune -o -path ../e2e -prune -o -name '*.go' -print)
 
-launch-kind: kind
-	if [ ! "$(shell kind get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
-		kind create cluster --name=$(KIND_CLUSTER_NAME) --config kind-config.yaml --image kindest/node:v$(KUBERNETES_VERSION) --wait 180s; \
+launch-kind: $(KIND)
+	if [ ! "$(shell $(KIND) get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
+		$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --config kind-config.yaml --image kindest/node:v$(KUBERNETES_VERSION) --wait 180s; \
 	fi
 
-shutdown-kind: kind
-	if [ "$(shell kind get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
-		kind delete cluster --name=$(KIND_CLUSTER_NAME) || true; \
+shutdown-kind: $(KIND)
+	if [ "$(shell $(KIND) get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
+		$(KIND) delete cluster --name=$(KIND_CLUSTER_NAME) || true; \
 	fi
 
 setup-cluster: $(KUBECTL)
@@ -43,7 +45,7 @@ load-operator-images:
 	cd ../ && make build-operator-image TAG=dev
 	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)website-operator:dev); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
-		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator:dev; \
+		$(KIND) load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator:dev; \
 	fi
 
 .PHONY: load-checker-images
@@ -51,7 +53,7 @@ load-checker-image:
 	cd ../ && make build-checker-image TAG=dev
 	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)repo-checker:dev); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
-		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)repo-checker:dev; \
+		$(KIND) load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)repo-checker:dev; \
 	fi
 
 .PHONY: load-ui-images
@@ -59,25 +61,35 @@ load-ui-image:
 	cd ../ && make build-ui-image TAG=dev
 	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)website-operator-ui:dev); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
-		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator-ui:dev; \
+		$(KIND) load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator-ui:dev; \
 	fi
 
 $(KUBECTL):
-	mkdir -p bin
+	mkdir -p $(BINDIR)
 	curl -sfL https://storage.googleapis.com/kubernetes-release/release/v$(KUBERNETES_VERSION)/bin/linux/amd64/kubectl -o $(KUBECTL)
 	chmod 755 $(KUBECTL)
 
 $(KUSTOMIZE):
-	mkdir -p bin
+	mkdir -p $(BINDIR)
 	curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VERSION)/kustomize_v$(KUSTOMIZE_VERSION)_linux_amd64.tar.gz | tar xzf - > kustomize
 	mv kustomize $(KUSTOMIZE)
 
-.PHONY: kind
-kind:
-	if [ ! "$(shell kind version | grep $(KIND_VERSION))" ]; then \
-		cd /tmp; env GOFLAGS= GO111MODULE=on go get sigs.k8s.io/kind@v$(KIND_VERSION); \
-	fi
+$(KIND):
+	mkdir -p $(BINDIR)
+	$(call go-install-tool,$(KIND),sigs.k8s.io/kind@v$(KIND_VERSION))
 
 .PHONY: clean
 clean:
-	rm -rf bin
+	rm -rf $(BINDIR)
+
+define go-install-tool
+@[ -f $(1) ] || { \
+set -e ;\
+TMP_DIR=$$(mktemp -d) ;\
+cd $$TMP_DIR ;\
+go mod init tmp ;\
+echo "Downloading $(2)" ;\
+GOBIN=$(BINDIR) go install $(2) ;\
+rm -rf $$TMP_DIR ;\
+}
+endef
