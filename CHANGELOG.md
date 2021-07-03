@@ -5,6 +5,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2021-07-03
+
+### Added
+
+- Feature AfterBuildScript by using batchc1/Job ([#16](https://github.com/zoetrope/website-operator/pull/16))
+
+### Changed
+
+- Update controller-runtime to v0.9.2 ([#14](https://github.com/zoetrope/website-operator/pull/14))
+- Fix RevisionWatcher is passing of incorrect address ([#15](https://github.com/zoetrope/website-operator/pull/15))
+
 ## [0.2.2] - 2021-03-04
 
 ### Added
@@ -63,7 +74,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 This is the first public release.
 
-[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/zoetrope/website-operator/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/zoetrope/website-operator/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/zoetrope/website-operator/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/zoetrope/website-operator/compare/v0.1.2...v0.2.0
