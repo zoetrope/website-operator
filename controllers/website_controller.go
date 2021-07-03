@@ -13,8 +13,10 @@ import (
 	"github.com/zoetrope/website-operator"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -30,15 +32,16 @@ import (
 )
 
 const (
-	OperatorName      = "website-operator"
-	AppName           = "website"
-	ManagedByKey      = "app.kubernetes.io/managed-by"
-	AppNameKey        = "app.kubernetes.io/name"
-	InstanceKey       = "app.kubernetes.io/instance"
-	RepoCheckerPort   = 9090
-	RepoCheckerSuffix = "-repo-checker"
-	BuildScriptSuffix = "-build-script"
-	NginxPort         = 8080
+	OperatorName         = "website-operator"
+	AppName              = "website"
+	ManagedByKey         = "app.kubernetes.io/managed-by"
+	AppNameKey           = "app.kubernetes.io/name"
+	InstanceKey          = "app.kubernetes.io/instance"
+	RepoCheckerPort      = 9090
+	RepoCheckerSuffix    = "-repo-checker"
+	BuildScriptName      = "build"
+	AfterBuildScriptName = "after-build"
+	NginxPort            = 8080
 )
 
 func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime.Scheme, nginxContainerImage string, repoCheckerContainerImage string, operatorNamespace string, revCli RevisionClient) *WebSiteReconciler {
@@ -66,13 +69,15 @@ type WebSiteReconciler struct {
 
 //+kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=sebsite.zoetrope.github.io,resources=websites/finalizers,verbs=update
+//+kubebuilder:rbac:groups=website.zoetrope.github.io,resources=websites/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=services/status,verbs=get
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
+//+kubebuilder:rbac:groups="batch",resources=jobs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="batch",resources=jobs/status,verbs=get
 
 func (r *WebSiteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("website", req.NamespacedName)
@@ -91,6 +96,11 @@ func (r *WebSiteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if errors.Is(err, errRevisionNotReady) {
 		return ctrl.Result{
 			Requeue: true,
+		}, nil
+	}
+	if errors.Is(err, errJobIsActive) {
+		return ctrl.Result{
+			RequeueAfter: 10 * time.Second,
 		}, nil
 	}
 	if err != nil {
@@ -120,10 +130,17 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 
 	isUpdatedAtLeastOnce := false
 
-	isUpdated, err := r.reconcileBuildScript(ctx, webSite)
+	isUpdated, err := r.reconcileScriptConfigMap(ctx, webSite, &webSite.Spec.BuildScript, BuildScriptName, true)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
-		log.Error(err, "failed to create ConfigMap")
+		log.Error(err, "failed to create ConfigMap for build script")
+		return isUpdatedAtLeastOnce, "", err
+	}
+
+	isUpdated, err = r.reconcileScriptConfigMap(ctx, webSite, webSite.Spec.AfterBuildScript, AfterBuildScriptName, true)
+	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
+	if err != nil {
+		log.Error(err, "failed to create ConfigMap for after build script")
 		return isUpdatedAtLeastOnce, "", err
 	}
 
@@ -168,42 +185,58 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
+	isUpdated, err = r.reconcileAfterBuildScript(ctx, webSite, revision)
+	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
+	if err == errJobIsActive {
+		return isUpdatedAtLeastOnce, "", err
+	}
+	if err != nil {
+		log.Error(err, "failed to create Job for AfterBuildScript")
+		return isUpdatedAtLeastOnce, "", err
+	}
+
 	return isUpdatedAtLeastOnce, revision, nil
 }
 
-func (r *WebSiteReconciler) reconcileBuildScript(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
+func (r *WebSiteReconciler) reconcileScriptConfigMap(ctx context.Context, webSite *websitev1beta1.WebSite, source *websitev1beta1.DataSource, scriptType string, required bool) (bool, error) {
 	log := r.log.WithValues("website", webSite.Name)
 
-	buildScript := ""
-	if webSite.Spec.BuildScript.RawData != nil {
-		buildScript = *webSite.Spec.BuildScript.RawData
-	} else if webSite.Spec.BuildScript.ConfigMap != nil {
+	if source == nil {
+		return false, nil
+	}
+
+	script := ""
+	if source.RawData != nil {
+		script = *source.RawData
+	} else if source.ConfigMap != nil {
 		buildScriptConfigMap := &corev1.ConfigMap{}
 		ns := r.operatorNamespace
-		if len((*webSite.Spec.BuildScript.ConfigMap).Namespace) != 0 {
-			ns = (*webSite.Spec.BuildScript.ConfigMap).Namespace
+		if len((*source.ConfigMap).Namespace) != 0 {
+			ns = (*source.ConfigMap).Namespace
 		}
-		err := r.client.Get(ctx, client.ObjectKey{Namespace: ns, Name: (*webSite.Spec.BuildScript.ConfigMap).Name}, buildScriptConfigMap)
+		err := r.client.Get(ctx, client.ObjectKey{Namespace: ns, Name: (*source.ConfigMap).Name}, buildScriptConfigMap)
 		if err != nil {
 			return false, err
 		}
 		var ok bool
-		buildScript, ok = buildScriptConfigMap.Data[(*webSite.Spec.BuildScript.ConfigMap).Key]
+		script, ok = buildScriptConfigMap.Data[(*source.ConfigMap).Key]
 		if !ok {
-			return false, fmt.Errorf("ConfigMap %s:%s does not have %s", ns, (*webSite.Spec.BuildScript.ConfigMap).Name, (*webSite.Spec.BuildScript.ConfigMap).Key)
+			return false, fmt.Errorf("ConfigMap %s:%s does not have %s", ns, (*source.ConfigMap).Name, (*source.ConfigMap).Key)
 		}
-	} else {
+	} else if required {
 		return false, errors.New("buildScript should not be empty")
+	} else {
+		return false, nil
 	}
 
 	cm := &corev1.ConfigMap{}
 	cm.SetNamespace(webSite.Namespace)
-	cm.SetName(webSite.Name + BuildScriptSuffix)
+	cm.SetName(webSite.Name + "-" + scriptType + "-script")
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, cm, func() error {
 		setStandardLabels(&cm.ObjectMeta)
 		cm.Data = map[string]string{
-			"build.sh": buildScript,
+			scriptType + ".sh": script,
 		}
 		return ctrl.SetControllerReference(webSite, cm, r.scheme)
 	})
@@ -483,11 +516,11 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 			},
 		},
 		corev1.Volume{
-			Name: "build-script",
+			Name: BuildScriptName + "-script",
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: webSite.Name + BuildScriptSuffix,
+						Name: webSite.Name + "-" + BuildScriptName + "-script",
 					},
 					DefaultMode: pointer.Int32Ptr(0755),
 				},
@@ -554,7 +587,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 	buildContainer := corev1.Container{
 		Name:    "build",
 		Image:   webSite.Spec.BuildImage,
-		Command: []string{"/bin/bash", "-c", "/build/build.sh"},
+		Command: []string{"/bin/bash", "-c", "/build/" + BuildScriptName + ".sh"},
 		SecurityContext: &corev1.SecurityContext{
 			RunAsUser: pointer.Int64Ptr(10000),
 		},
@@ -565,7 +598,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 			},
 			{
 				MountPath: "/build",
-				Name:      "build-script",
+				Name:      BuildScriptName + "-script",
 			},
 			{
 				MountPath: "/data",
@@ -746,6 +779,156 @@ func (r *WebSiteReconciler) extraResource(ctx context.Context, webSite *websitev
 	return &obj, nil
 }
 
+var errJobIsActive = errors.New("job is active")
+
+func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (bool, error) {
+	if webSite.Spec.AfterBuildScript == nil {
+		return false, nil
+	}
+
+	log := r.log.WithValues("website", webSite.Name)
+
+	job := &batchv1.Job{}
+	job.SetNamespace(webSite.Namespace)
+	job.SetName(webSite.Name)
+	template := corev1.PodTemplateSpec{}
+	template.Spec.RestartPolicy = corev1.RestartPolicyNever
+	template.Spec.Volumes = append(template.Spec.Volumes,
+		corev1.Volume{
+			Name: "log",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		corev1.Volume{
+			Name: "cache",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		corev1.Volume{
+			Name: "tmp",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		corev1.Volume{
+			Name: AfterBuildScriptName + "-script",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: webSite.Name + "-" + AfterBuildScriptName + "-script",
+					},
+					DefaultMode: pointer.Int32Ptr(0755),
+				},
+			},
+		},
+	)
+
+	if webSite.Spec.DeployKeySecretName != nil {
+		template.Spec.Volumes = append(template.Spec.Volumes,
+			corev1.Volume{
+				Name: "deploy-key",
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName:  *webSite.Spec.DeployKeySecretName,
+						DefaultMode: pointer.Int32Ptr(0600),
+					},
+				},
+			},
+		)
+	}
+	template.Spec.SecurityContext = &corev1.PodSecurityContext{
+		FSGroup: pointer.Int64Ptr(10000),
+	}
+	buildContainer := corev1.Container{
+		Name:    "job",
+		Image:   webSite.Spec.BuildImage,
+		Command: []string{"/bin/bash", "-c", "/after-build/" + AfterBuildScriptName + ".sh"},
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser: pointer.Int64Ptr(10000),
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				MountPath: "/after-build",
+				Name:      AfterBuildScriptName + "-script",
+			},
+			{
+				MountPath: "/tmp",
+				Name:      "tmp",
+			},
+		},
+		Env: append(makeEnvCommon(webSite),
+			corev1.EnvVar{
+				Name:  "HOME",
+				Value: "/home/ubuntu",
+			},
+			corev1.EnvVar{
+				Name:  "REVISION",
+				Value: revision,
+			},
+		),
+	}
+	if webSite.Spec.DeployKeySecretName != nil {
+		buildContainer.VolumeMounts = append(buildContainer.VolumeMounts, corev1.VolumeMount{
+			MountPath: "/home/ubuntu/.ssh",
+			Name:      "deploy-key",
+		})
+	}
+	for _, secret := range webSite.Spec.BuildSecrets {
+		buildContainer.Env = append(buildContainer.Env, corev1.EnvVar{
+			Name: secret.Key,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secret.Name,
+					},
+					Key: secret.Key,
+				},
+			},
+		})
+	}
+	for _, secret := range webSite.Spec.ImagePullSecrets {
+		template.Spec.ImagePullSecrets = append(template.Spec.ImagePullSecrets, secret)
+	}
+	template.Spec.Containers = append(template.Spec.Containers, buildContainer)
+
+	err := r.client.Get(ctx, client.ObjectKey{Namespace: job.Namespace, Name: job.Name}, job)
+	if err == nil {
+		if job.Status.Active != 0 {
+			return false, errJobIsActive
+		}
+		if equality.Semantic.DeepDerivative(template, job.Spec.Template) {
+			return false, nil
+		}
+		propergationPolicy := metav1.DeletePropagationBackground
+		err = r.client.Delete(ctx, job, &client.DeleteOptions{PropagationPolicy: &propergationPolicy})
+		if err != nil {
+			return false, err
+		}
+	} else if !apierrors.IsNotFound(err) {
+		return false, err
+	}
+
+	newJob := &batchv1.Job{}
+	newJob.SetNamespace(webSite.Namespace)
+	newJob.SetName(webSite.Name)
+	newJob.Spec.Template = template
+	err = ctrl.SetControllerReference(webSite, newJob, r.scheme)
+	if err != nil {
+		return false, err
+	}
+
+	err = r.client.Create(ctx, newJob, &client.CreateOptions{})
+	if err != nil {
+		log.Error(err, "unable to reconcile after build script job")
+		return false, err
+	}
+
+	log.Info("reconcile Job for AfterBuildScript successfully")
+	return true, nil
+}
+
 func setStandardLabels(om *metav1.ObjectMeta) {
 	if om.Labels == nil {
 		om.Labels = make(map[string]string)
@@ -782,6 +965,7 @@ func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Service{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.ConfigMap{}).
+		Owns(&batchv1.Job{}).
 		Watches(&src, &handler.EnqueueRequestForObject{}).
 		Complete(r)
 }

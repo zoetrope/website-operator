@@ -11,6 +11,10 @@ spec:
       key: build-honkit.sh
   repoURL: https://github.com/zoetrope/honkit-sample.git
   branch: main
+  afterBuildScript:
+    configMap:
+      name: after-build-scripts
+      key: after-build-honkit.sh
   extraResources:
     - configMap:
         name: httpproxy

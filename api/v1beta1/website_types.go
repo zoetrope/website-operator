@@ -13,11 +13,11 @@ type WebSiteSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// BuildImage is the container image name that will be used to build the website
+	// BuildImage is a container image name that will be used to build the website
 	// +kubebuiler:validation:Required
 	BuildImage string `json:"buildImage"`
 
-	// BuildScript is the script to build the website
+	// BuildScript is a script to build the website
 	// +kubebuiler:validation:Required
 	BuildScript DataSource `json:"buildScript"`
 
@@ -58,6 +58,10 @@ type WebSiteSpec struct {
 	// ServiceTemplate is a `Service` template for nginx.
 	// +optional
 	ServiceTemplate *ServiceTemplate `json:"serviceTemplate,omitempty"`
+
+	// AfterBuildScript is A script to execute in Job once after build
+	// +optional
+	AfterBuildScript *DataSource `json:"afterBuildScript"`
 }
 
 // SecretKey represents the name and key of a secret resource.

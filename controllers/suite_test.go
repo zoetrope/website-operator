@@ -7,13 +7,12 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/zoetrope/website-operator"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
+	"go.uber.org/zap/zapcore"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -27,6 +26,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var scheme *runtime.Scheme = runtime.NewScheme()
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -35,7 +35,7 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.StacktraceLevel(zapcore.DPanicLevel), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -48,37 +48,16 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	sch := runtime.NewScheme()
-	err = websitev1beta1.AddToScheme(sch)
+	err = websitev1beta1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
-	err = clientgoscheme.AddToScheme(sch)
+	err = clientgoscheme.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: sch})
+	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
-
-	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme: sch,
-	})
-	Expect(err).NotTo(HaveOccurred())
-	err = NewWebSiteReconciler(
-		k8sClient,
-		ctrl.Log.WithName("controllers").WithName("WebSite"),
-		sch,
-		website.DefaultNginxContainerImage,
-		website.DefaultRepoCheckerContainerImage,
-		"website-operator-system",
-		&mockRevisionClient{"rev1"},
-	).SetupWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	go func() {
-		err = mgr.Start(ctrl.SetupSignalHandler())
-		Expect(err).NotTo(HaveOccurred())
-	}()
 
 	ns := &corev1.Namespace{}
 	ns.Name = "website-operator-system"
