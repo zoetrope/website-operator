@@ -5,6 +5,7 @@ KIND := $(BINDIR)/kind
 KUBECTL := $(BINDIR)/kubectl
 KUSTOMIZE := $(BINDIR)/kustomize
 KIND_CLUSTER_NAME=website-e2e
+OS := $(shell uname | $(awk) '{print tolower($1)}')
 
 GO_FILES := $(shell find .. -path ../vendor -prune -o -path ../e2e -prune -o -name '*.go' -print)
 
@@ -66,12 +67,12 @@ load-ui-image:
 
 $(KUBECTL):
 	mkdir -p $(BINDIR)
-	curl -sfL https://storage.googleapis.com/kubernetes-release/release/v$(KUBERNETES_VERSION)/bin/linux/amd64/kubectl -o $(KUBECTL)
+	curl -sfL https://storage.googleapis.com/kubernetes-release/release/v$(KUBERNETES_VERSION)/bin/$(OS)/amd64/kubectl -o $(KUBECTL)
 	chmod 755 $(KUBECTL)
 
 $(KUSTOMIZE):
 	mkdir -p $(BINDIR)
-	curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VERSION)/kustomize_v$(KUSTOMIZE_VERSION)_linux_amd64.tar.gz | tar xzf - > kustomize
+	curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VERSION)/kustomize_v$(KUSTOMIZE_VERSION)_$(OS)_amd64.tar.gz | tar xzf - > kustomize
 	mv kustomize $(KUSTOMIZE)
 
 $(KIND):

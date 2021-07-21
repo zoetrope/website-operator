@@ -58,15 +58,15 @@ test: manifests generate setup-envtest ## fmt vet ## Run tests.
 
 $(WEBSITE_OPERATOR): $(GO_FILES) generate
 	mkdir -p build
-	go build -o $@ ./cmd/website-operator
+	GOOS=linux go build -o $@ ./cmd/website-operator
 
 $(REPO_CHECKER): $(GO_FILES)
 	mkdir -p build
-	go build -o $@ ./cmd/repo-checker
+	GOOS=linux go build -o $@ ./cmd/repo-checker
 
 $(UI): $(GO_FILES)
 	mkdir -p build
-	go build -o $@ ./cmd/ui
+	GOOS=linux go build -o $@ ./cmd/ui
 
 .PHONY: frontend
 frontend:
