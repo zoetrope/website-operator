@@ -4,7 +4,7 @@ metadata:
   name: mkdocs-sample
   namespace: default
 spec:
-  buildImage: ghcr.io/zoetrope/python:3.8.5
+  buildImage: ghcr.io/zoetrope/python:3.8.10
   buildScript:
     configMap:
       name: build-scripts

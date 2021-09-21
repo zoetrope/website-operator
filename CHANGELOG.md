@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2021-09-21
+
+### Changed
+
+- Update go to 1.17 ([#18](https://github.com/zoetrope/website-operator/pull/18))
+
 ## [0.3.0] - 2021-07-03
 
 ### Added
@@ -74,7 +80,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 This is the first public release.
 
-[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.3.1...HEAD
+[0.3.0]: https://github.com/zoetrope/website-operator/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/zoetrope/website-operator/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/zoetrope/website-operator/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/zoetrope/website-operator/compare/v0.2.0...v0.2.1
