@@ -2,7 +2,7 @@ include common.mk
 
 SHELL := /bin/bash
 TAG ?= latest
-CRD_OPTIONS ?= "crd:crdVersions=v1"
+CRD_OPTIONS = "crd:crdVersions=v1"
 
 CONTROLLER_GEN := $(PWD)/bin/controller-gen
 KUBEBUILDER := $(PWD)/bin/kubebuilder
@@ -15,6 +15,7 @@ INSTALL_YAML = build/install.yaml
 GO_FILES := $(shell find . -type f -name '*.go')
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
+
 
 all: $(WEBSITE_OPERATOR) $(REPO_CHECKER) $(UI)
 

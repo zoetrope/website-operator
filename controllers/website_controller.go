@@ -569,7 +569,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 			RunAsUser: pointer.Int64Ptr(33), // id for www-data
 		},
 		ReadinessProbe: &corev1.Probe{
-			Handler: corev1.Handler{
+			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path:        "/",
 					Port:        intstr.FromInt(8080),

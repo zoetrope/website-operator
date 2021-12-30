@@ -489,7 +489,7 @@ spec:
 					return false, fmt.Errorf("error %v", err)
 				}
 				return newJob.ObjectMeta.UID != job.ObjectMeta.UID, nil
-			}, 30).Should(BeTrue())
+			}, 60).Should(BeTrue())
 
 			Expect(newJob.Spec.Template.Spec.Containers).Should(HaveLen(1))
 			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
