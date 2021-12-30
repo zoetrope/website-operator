@@ -275,9 +275,3 @@ subjects:
     name: default
     namespace: website-operator-system
 ```
-
-## Web UI
-
-Web UI provides view of status and build log.
-
-![Web UI](./screenshot.png)
