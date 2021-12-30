@@ -10,14 +10,12 @@ KUSTOMIZE := $(PWD)/bin/kustomize
 
 WEBSITE_OPERATOR = build/website-operator
 REPO_CHECKER = build/repo-checker
-UI = build/ui
 INSTALL_YAML = build/install.yaml
 GO_FILES := $(shell find . -type f -name '*.go')
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 
-
-all: $(WEBSITE_OPERATOR) $(REPO_CHECKER) $(UI)
+all: $(WEBSITE_OPERATOR) $(REPO_CHECKER)
 
 ##@ General
 
@@ -65,14 +63,6 @@ $(REPO_CHECKER): $(GO_FILES)
 	mkdir -p build
 	go build -o $@ ./cmd/repo-checker
 
-$(UI): $(GO_FILES)
-	mkdir -p build
-	go build -o $@ ./cmd/ui
-
-.PHONY: frontend
-frontend:
-	cd ui/frontend && npm install && npm run build
-
 $(INSTALL_YAML): $(KUSTOMIZE)
 	mkdir -p build
 	$(KUSTOMIZE) build ./config/release > $@
@@ -94,18 +84,6 @@ build-checker-image: $(REPO_CHECKER)
 .PHONY: push-checker-image
 push-checker-image:
 	docker push ${REGISTRY}repo-checker:${TAG}
-
-.PHONY: build-ui-image
-build-ui-image: $(UI) frontend
-	rm -f ./docker/ui/ui
-	cp $(UI) ./docker/ui
-	rm -rf ./docker/ui/dist
-	cp -r ui/frontend/dist ./docker/ui/
-	docker build --no-cache -t ${REGISTRY}website-operator-ui:${TAG} ./docker/ui
-
-.PHONY: push-ui-image
-push-ui-image:
-	docker push ${REGISTRY}website-operator-ui:${TAG}
 
 .PHONY: setup
 setup: $(KUBEBUILDER) $(CONTROLLER_GEN) setup-envtest
