@@ -31,6 +31,11 @@ type apiServer struct {
 func (s apiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.allowCORS {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		if r.Method == http.MethodOptions {
+			return
+		}
 	}
 
 	p := r.URL.Path[len("/api/v1/"):]
@@ -65,7 +70,7 @@ func (s apiServer) listWebSites(w http.ResponseWriter, r *http.Request) {
 			Namespace: item.Namespace,
 			Name:      item.Name,
 			Ready:     string(item.Status.Ready),
-			Revision:  item.Status.Revision,
+			Revision:  item.Status.Revision[:7],
 			RepoURL:   item.Spec.RepoURL,
 			Branch:    item.Spec.Branch,
 		}
