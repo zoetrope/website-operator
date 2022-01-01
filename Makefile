@@ -69,6 +69,10 @@ $(UI): $(GO_FILES)
 	mkdir -p build
 	go build -o $@ ./cmd/ui
 
+.PHONY: frontend
+frontend:
+	cd ui/frontend && npm install && npm run build
+
 $(INSTALL_YAML): $(KUSTOMIZE)
 	mkdir -p build
 	$(KUSTOMIZE) build ./config/release > $@
@@ -92,12 +96,11 @@ push-checker-image:
 	docker push ${REGISTRY}repo-checker:${TAG}
 
 .PHONY: build-ui-image
-build-ui-image: $(UI)
+build-ui-image: $(UI) frontend
 	rm -f ./docker/ui/ui
-	rm -rf ./docker/ui/dist
 	cp $(UI) ./docker/ui
-	mkdir -p ./docker/ui/dist
-	cp ui/frontend/index.html ./docker/ui/dist/
+	rm -rf ./docker/ui/dist
+	cp -r ui/frontend/dist ./docker/ui/
 	docker build --no-cache -t ${REGISTRY}website-operator-ui:${TAG} ./docker/ui
 
 .PHONY: push-ui-image

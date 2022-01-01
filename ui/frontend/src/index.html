@@ -2,8 +2,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./app.css">
+  <script src="./app.js" type="module"></script>
 </head>
 <body>
 
@@ -17,7 +17,7 @@
   </div>
 </nav>
 
-<main x-data="model()" @keydown.escape="showModal = false">
+<main x-data="app" @keydown.escape="showModal = false">
   <div class="max-w-full mx-auto py-6 px-10">
     <div class="flex flex-col">
       <div class="-my-2 ">
@@ -87,32 +87,5 @@
     </div>
   </div>
 </main>
-
-<script>
-  function model() {
-    return {
-      websites: [],
-      showModal: false,
-      modalTitle: "",
-      log: "",
-      init() {
-        fetch('/api/v1/websites')
-          .then(response => response.json())
-          .then(data => {
-            this.websites = data
-          })
-      },
-      getLog(ns, name) {
-        this.showModal = true
-        this.modalTitle = ns + "/" + name
-        fetch('/api/v1/logs/' + ns + '/' + name)
-          .then(response => response.text())
-          .then(data => {
-            this.log = data
-          })
-      }
-    }
-  }
-</script>
 </body>
 </html>
