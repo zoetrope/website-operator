@@ -16,10 +16,12 @@ jobs:
           go-version: ${{ env.go-version }}
       - run: TAG=${GITHUB_REF#refs/tags/v} make build-operator-image
       - run: TAG=${GITHUB_REF#refs/tags/v} make build-checker-image
+      - run: TAG=${GITHUB_REF#refs/tags/v} make build-ui-image
       - name: Login to ghcr.io
         run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
       - run: TAG=${GITHUB_REF#refs/tags/v} make push-operator-image
       - run: TAG=${GITHUB_REF#refs/tags/v} make push-checker-image
+      - run: TAG=${GITHUB_REF#refs/tags/v} make push-ui-image
   release:
     name: Release on GitHub
     needs: image
