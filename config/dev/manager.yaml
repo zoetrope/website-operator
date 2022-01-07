@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      securityContext: null
+      containers:
+        - command:
+            - /website-operator
+          image: website-operator:dev
+          args: null
+          name: manager
+          securityContext: null
+          # This is a workaround to tell Tilt the name of container image.
+          # https://docs.tilt.dev/custom_resource.html
+          env:
+            - name: REPOCHECKER_CONTAINER_IMAGE
+              value: repo-checker:dev

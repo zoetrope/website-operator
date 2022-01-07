@@ -1,7 +1,0 @@
-apiVersion: website.zoetrope.github.io/v1beta1
-kind: WebSite
-metadata:
-  name: website-sample
-spec:
-  # Add fields here
-  foo: bar

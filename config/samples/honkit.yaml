@@ -1,0 +1,13 @@
+apiVersion: website.zoetrope.github.io/v1beta1
+kind: WebSite
+metadata:
+  name: honkit-sample
+  namespace: default
+spec:
+  buildImage: ghcr.io/zoetrope/node:14.17.6
+  buildScript:
+    configMap:
+      name: build-scripts
+      key: build-honkit.sh
+  repoURL: https://github.com/zoetrope/honkit-sample.git
+  branch: main

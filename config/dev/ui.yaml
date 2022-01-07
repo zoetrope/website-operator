@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  namespace: system
+spec:
+  template:
+    spec:
+      securityContext: null
+      containers:
+        - command:
+            - /website-operator-ui
+          image: website-operator-ui:dev
+          args: null
+          name: ui
+          securityContext: null

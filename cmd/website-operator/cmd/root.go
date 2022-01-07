@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/zoetrope/website-operator"
 )
 
@@ -40,12 +41,20 @@ func Execute() {
 }
 
 func init() {
+	repochecker := viper.GetString("REPOCHECKER_CONTAINER_IMAGE")
+	if repochecker == "" {
+		repochecker = website.DefaultRepoCheckerContainerImage
+	}
+	nginx := viper.GetString("NGINX_CONTAINER_IMAGE")
+	if nginx == "" {
+		nginx = website.DefaultNginxContainerImage
+	}
 	fs := rootCmd.Flags()
 	fs.StringVar(&config.metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to")
 	fs.StringVar(&config.probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	fs.StringVar(&config.leaderElectionID, "leader-election-id", "website-operator", "ID for leader election by controller-runtime")
 	fs.BoolVar(&config.enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-	fs.StringVar(&config.nginxContainerImage, "nginx-container-image", website.DefaultNginxContainerImage, "The container image name of nginx")
-	fs.StringVar(&config.repoCheckerContainerImage, "repochecker-container-image", website.DefaultRepoCheckerContainerImage, "The container image name of repo-checker")
+	fs.StringVar(&config.nginxContainerImage, "nginx-container-image", nginx, "The container image name of nginx")
+	fs.StringVar(&config.repoCheckerContainerImage, "repochecker-container-image", repochecker, "The container image name of repo-checker")
 	fs.BoolVar(&config.development, "development", false, "Zap development mode")
 }
