@@ -23,7 +23,7 @@ func TestE2E(t *testing.T) {
 }
 
 func kubectl(input []byte, args ...string) (stdout []byte, err error) {
-	cmd := exec.Command("./bin/kubectl", args...)
+	cmd := exec.Command("kubectl", args...)
 	if input != nil {
 		cmd.Stdin = bytes.NewReader(input)
 	}
