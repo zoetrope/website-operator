@@ -16,15 +16,24 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.go-version }}
-      - name: Cache Tools
-        id: cache-tools
+      - name: Cache Go Tools
+        id: cache-go-tools
         uses: actions/cache@v2
         with:
-          path: |
-            bin
-          key: cache-${{ env.cache-version }}-go-${{ env.go-version }}-${{ hashFiles('Makefile') }}
+          path: bin
+          key: cache-${{ env.cache-version }}-go-${{ env.go-version }}-${{ hashFiles('go.mod') }}
       - run: make setup
-        if: steps.cache-tools.outputs.cache-hit != 'true'
+        if: steps.cache-go-tools.outputs.cache-hit != 'true'
+      - name: Cache Tools
+        id: cache-aqua-tools
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/.aqua
+          key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
+      - uses: aquaproj/aqua-installer@v0.4.0
+        with:
+          version: v0.8.13
+        if: steps.cache-aqua-tools.outputs.cache-hit != 'true'
       - run: |
           cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
           ${{ secrets.DEPLOY_KEY }}
@@ -39,6 +48,24 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.go-version }}
+      - name: Cache Go Tools
+        id: cache-go-tools
+        uses: actions/cache@v2
+        with:
+          path: bin
+          key: cache-${{ env.cache-version }}-go-${{ env.go-version }}-${{ hashFiles('go.mod') }}
+      - run: make setup
+        if: steps.cache-go-tools.outputs.cache-hit != 'true'
+      - name: Cache Tools
+        id: cache-aqua-tools
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/.aqua
+          key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
+      - uses: aquaproj/aqua-installer@v0.4.0
+        with:
+          version: v0.8.13
+        if: steps.cache-aqua-tools.outputs.cache-hit != 'true'
       - run: |
           cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
           ${{ secrets.DEPLOY_KEY }}
@@ -49,8 +76,8 @@ jobs:
         working-directory: e2e
       - if: failure() && steps.run_e2e_test.outcome == 'failure'
         run: |
-          ./e2e/bin/kubectl get pod
-          ./e2e/bin/kubectl describe pod
+          kubectl get pod
+          kubectl describe pod
   deploy:
     name: Deploy the latest image
     runs-on: ubuntu-20.04

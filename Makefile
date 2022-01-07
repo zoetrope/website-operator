@@ -4,9 +4,7 @@ SHELL := /bin/bash
 TAG ?= latest
 CRD_OPTIONS = "crd:crdVersions=v1"
 
-CONTROLLER_GEN := $(PWD)/bin/controller-gen
-KUBEBUILDER := $(PWD)/bin/kubebuilder
-KUSTOMIZE := $(PWD)/bin/kustomize
+BIN_DIR := $(shell pwd)/bin
 
 WEBSITE_OPERATOR = build/website-operator
 REPO_CHECKER = build/repo-checker
@@ -108,27 +106,19 @@ push-ui-image:
 	docker push ${REGISTRY}website-operator-ui:${TAG}
 
 .PHONY: setup
-setup: $(KUBEBUILDER) $(CONTROLLER_GEN) setup-envtest
+setup: setup-envtest controller-gen
 
-$(KUBEBUILDER):
-	mkdir -p bin
-	curl -sfL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VERSION)/kubebuilder_$(GOOS)_$(GOARCH) -o $@
-	chmod +x $@
+CONTROLLER_GEN := $(BIN_DIR)/controller-gen
+.PHONY: controller-gen
+controller-gen:
+	mkdir -p $(BIN_DIR)
+	GOBIN=$(BIN_DIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen
 
-$(CONTROLLER_GEN):
-	mkdir -p bin
-	env GOBIN=$(PWD)/bin GOFLAGS= go install sigs.k8s.io/controller-tools/cmd/controller-gen
-
-$(KUSTOMIZE):
-	mkdir -p bin
-	curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VERSION)/kustomize_v$(KUSTOMIZE_VERSION)_$(GOOS)_$(GOARCH).tar.gz | tar xzf - > kustomize
-	mv kustomize $(KUSTOMIZE)
-
-SETUP_ENVTEST := $(shell pwd)/bin/setup-envtest
+SETUP_ENVTEST := $(BIN_DIR)/setup-envtest
 .PHONY: setup-envtest
 setup-envtest: ## Download setup-envtest locally if necessary
 	# see https://github.com/kubernetes-sigs/controller-runtime/tree/master/tools/setup-envtest
-	GOBIN=$(shell pwd)/bin go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	GOBIN=$(BIN_DIR) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
 .PHONY: clean
 clean:
