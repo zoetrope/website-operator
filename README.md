@@ -1,4 +1,8 @@
-![CI](https://github.com/zoetrope/website-operator/workflows/CI/badge.svg)
+[![GitHub release](https://img.shields.io/github/release/zoetrope/website-operator.svg?maxAge=60)](https://github.com/zoetrope/website-operator/releases)
+[![CI](https://github.com/zoetrope/website-operator/actions/workflows/ci.yaml/badge.svg)](https://github.com/zoetrope/website-operator/actions/workflows/ci.yaml)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/zoetrope/website-operator?tab=overview)](https://pkg.go.dev/github.com/zoetrope/website-operator?tab=overview)
+[![Go Report Card](https://goreportcard.com/badge/github.com/zoetrope/website-operator)](https://goreportcard.com/report/github.com/zoetrope/website-operator)
+[![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com/)
 
 # website-operator
 
