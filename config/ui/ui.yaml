@@ -22,6 +22,10 @@ spec:
             - --allow-cors=true
           image: ghcr.io/zoetrope/website-operator-ui:dev
           name: ui
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
           env:
             - name: POD_NAMESPACE
               valueFrom:

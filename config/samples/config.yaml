@@ -1,0 +1,20 @@
+apiVersion: v1
+data:
+  build-honkit.sh: |
+    #!/bin/bash -ex
+    cd $HOME
+    rm -rf $REPO_NAME
+    git clone $REPO_URL
+    cd $REPO_NAME
+    git checkout $REVISION
+
+    npm install
+    npm run build
+
+    rm -rf $OUTPUT/*
+    cp -r _book/* $OUTPUT/
+    cp -r assets/* $OUTPUT/assets/
+kind: ConfigMap
+metadata:
+  name: build-scripts
+  namespace: website-operator-system

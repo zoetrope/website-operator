@@ -53,6 +53,15 @@ vet: ## Run go vet against code.
 test: manifests generate setup-envtest ## fmt vet ## Run tests.
 	source <($(SETUP_ENVTEST) use -p env); go test -v -count 1 ./...
 
+.PHONY: dev
+dev:
+	ctlptl apply -f ./cluster.yaml
+	$(MAKE) -C ./e2e/ setup-cluster
+
+.PHONY: stop-dev
+stop-dev:
+	ctlptl delete -f ./cluster.yaml
+
 ##@ Build
 
 $(WEBSITE_OPERATOR): $(GO_FILES) generate

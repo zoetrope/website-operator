@@ -16,8 +16,7 @@ shutdown-kind:
 
 setup-cluster:
 	kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
-	kubectl wait pod -l app=contour -n projectcontour --for condition=Ready --timeout 180s
-	kubectl wait pod -l app=envoy -n projectcontour --for condition=Ready --timeout 180s
+	kubectl wait -n projectcontour --for condition=available --all deployments --timeout 180s
 
 test: launch-kind load-images setup-cluster
 	kubectl config use-context kind-$(KIND_CLUSTER_NAME)
