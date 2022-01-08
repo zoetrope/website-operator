@@ -16,14 +16,6 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.go-version }}
-      - name: Cache Go Tools
-        id: cache-go-tools
-        uses: actions/cache@v2
-        with:
-          path: bin
-          key: cache-${{ env.cache-version }}-go-${{ env.go-version }}-${{ hashFiles('go.mod') }}
-      - run: make setup
-        if: steps.cache-go-tools.outputs.cache-hit != 'true'
       - name: Cache Tools
         id: cache-aqua-tools
         uses: actions/cache@v2
@@ -48,14 +40,6 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.go-version }}
-      - name: Cache Go Tools
-        id: cache-go-tools
-        uses: actions/cache@v2
-        with:
-          path: bin
-          key: cache-${{ env.cache-version }}-go-${{ env.go-version }}-${{ hashFiles('go.mod') }}
-      - run: make setup
-        if: steps.cache-go-tools.outputs.cache-hit != 'true'
       - name: Cache Tools
         id: cache-aqua-tools
         uses: actions/cache@v2
