@@ -20,11 +20,11 @@ jobs:
         id: cache-aqua-tools
         uses: actions/cache@v2
         with:
-          path: /home/runner/.aqua
+          path: ~/.local/share/aquaproj-aqua
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
-      - uses: aquaproj/aqua-installer@v0.5.0
+      - uses: aquaproj/aqua-installer@v0.6.0
         with:
-          aqua_version: v0.9.0
+          aqua_version: v0.10.0
           aqua_opts: ""
       - run: |
           cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
@@ -44,11 +44,11 @@ jobs:
         id: cache-aqua-tools
         uses: actions/cache@v2
         with:
-          path: /home/runner/.aqua
+          path: ~/.local/share/aquaproj-aqua
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
-      - uses: aquaproj/aqua-installer@v0.5.0
+      - uses: aquaproj/aqua-installer@v0.6.0
         with:
-          aqua_version: v0.9.0
+          aqua_version: v0.10.0
           aqua_opts: ""
       - run: |
           cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
