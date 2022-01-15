@@ -35,7 +35,7 @@ metadata:
   name: honkit-sample
   namespace: default
 spec:
-  buildImage: ghcr.io/zoetrope/node:14.17.6
+  buildImage: ghcr.io/zoetrope/node:16.13.2
   buildScript:
     rawData: |
         #!/bin/bash -ex
@@ -116,7 +116,7 @@ metadata:
   name: honkit-sample
   namespace: default
 spec:
-  buildImage: ghcr.io/zoetrope/node:14.17.6
+  buildImage: ghcr.io/zoetrope/node:16.13.2
   buildScript:
     configMap:
       name: build-scripts
@@ -170,7 +170,7 @@ metadata:
   name: mkdocs-sample
   namespace: default
 spec:
-  buildImage: ghcr.io/zoetrope/python:3.8.10
+  buildImage: ghcr.io/zoetrope/python:3.9.5
   buildScript:
     configMap:
       name: build-scripts
@@ -225,7 +225,7 @@ metadata:
   name: honkit-sample
   namespace: default
 spec:
-  buildImage: ghcr.io/zoetrope/node:14.17.6
+  buildImage: ghcr.io/zoetrope/node:16.13.2
   buildScript:
     configMap:
       name: build-scripts
