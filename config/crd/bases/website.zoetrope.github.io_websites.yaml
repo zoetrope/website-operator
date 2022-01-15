@@ -43,7 +43,7 @@ spec:
             description: WebSiteSpec defines the desired state of WebSite
             properties:
               afterBuildScript:
-                description: AfterBuildScript is A script to execute in Job once after
+                description: AfterBuildScript is a script to execute in Job once after
                   build
                 properties:
                   configMap:
@@ -185,6 +185,9 @@ spec:
                         type: object
                     type: object
                 type: object
+              publicURL:
+                description: PublicURL is the URL of the website
+                type: string
               replicas:
                 default: 1
                 description: Replicas is the number of nginx instances

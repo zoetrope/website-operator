@@ -8,6 +8,7 @@ import (
 
 	"github.com/cybozu-go/log"
 	"github.com/zoetrope/website-operator/api/v1beta1"
+	"github.com/zoetrope/website-operator/controllers"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
@@ -52,9 +53,10 @@ func (s apiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type website struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
-	Ready     string `json:"ready"`
+	Status    string `json:"status"`
 	Revision  string `json:"revision"`
-	RepoURL   string `json:"url"`
+	RepoURL   string `json:"repo"`
+	PublicURL string `json:"public"`
 	Branch    string `json:"branch"`
 }
 
@@ -63,15 +65,26 @@ func (s apiServer) listWebSites(w http.ResponseWriter, r *http.Request) {
 	err := s.kubeClient.List(r.Context(), &websites)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	resp := make([]website, len(websites.Items))
 	for i, item := range websites.Items {
+		status, err := s.getStatus(r, item)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		rev := item.Status.Revision
+		if len(rev) > 7 {
+			rev = rev[:7]
+		}
 		resp[i] = website{
 			Namespace: item.Namespace,
 			Name:      item.Name,
-			Ready:     string(item.Status.Ready),
-			Revision:  item.Status.Revision[:7],
+			Status:    status,
+			Revision:  rev,
 			RepoURL:   item.Spec.RepoURL,
+			PublicURL: item.Spec.PublicURL,
 			Branch:    item.Spec.Branch,
 		}
 	}
@@ -84,6 +97,31 @@ func (s apiServer) listWebSites(w http.ResponseWriter, r *http.Request) {
 			log.FnError: err.Error(),
 		})
 	}
+}
+
+func (s apiServer) getStatus(r *http.Request, website v1beta1.WebSite) (string, error) {
+	if website.Status.Ready != corev1.ConditionTrue {
+		return "NotReady", nil
+	}
+
+	var pods corev1.PodList
+	err := s.kubeClient.List(r.Context(), &pods, &client.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{
+			"app.kubernetes.io/instance":   website.Name,
+			"app.kubernetes.io/managed-by": "website-operator",
+		}),
+		Namespace: website.Namespace,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for _, pod := range pods.Items {
+		if pod.Status.Phase != corev1.PodRunning {
+			return string(pod.Status.Phase), nil
+		}
+	}
+	return "Running", nil
 }
 
 func (s apiServer) getBuildLog(w http.ResponseWriter, r *http.Request) {
@@ -99,6 +137,7 @@ func (s apiServer) getBuildLog(w http.ResponseWriter, r *http.Request) {
 	var pods corev1.PodList
 	err := s.kubeClient.List(r.Context(), &pods, &client.ListOptions{
 		LabelSelector: labels.SelectorFromSet(map[string]string{
+			"app.kubernetes.io/name":       controllers.AppNameNginx,
 			"app.kubernetes.io/instance":   resName,
 			"app.kubernetes.io/managed-by": "website-operator",
 		}),
@@ -112,7 +151,16 @@ func (s apiServer) getBuildLog(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	req := s.rawClient.CoreV1().Pods(ns).GetLogs(pods.Items[0].Name, &corev1.PodLogOptions{
+	latestPod := pods.Items[0]
+	creationTimestamp := latestPod.GetCreationTimestamp().Time
+	for _, pod := range pods.Items {
+		if pod.GetCreationTimestamp().After(creationTimestamp) {
+			latestPod = pod
+			creationTimestamp = pod.GetCreationTimestamp().Time
+		}
+	}
+
+	req := s.rawClient.CoreV1().Pods(ns).GetLogs(latestPod.GetName(), &corev1.PodLogOptions{
 		Container: "build",
 	})
 

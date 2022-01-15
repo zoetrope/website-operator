@@ -11,3 +11,4 @@ spec:
       key: build-honkit.sh
   repoURL: https://github.com/zoetrope/honkit-sample.git
   branch: main
+  publicURL: http://localhost:9090
