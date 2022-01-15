@@ -35,17 +35,21 @@ import (
 )
 
 const (
-	OperatorName         = "website-operator"
-	AppName              = "website"
-	ManagedByKey         = "app.kubernetes.io/managed-by"
-	AppNameKey           = "app.kubernetes.io/name"
-	InstanceKey          = "app.kubernetes.io/instance"
-	RepoCheckerPort      = 9090
-	RepoCheckerSuffix    = "-repo-checker"
-	BuildScriptName      = "build"
-	AfterBuildScriptName = "after-build"
-	NginxPort            = 8080
-	AnnChecksumConfig    = "checksum/config"
+	OperatorName              = "website-operator"
+	AppNameBuildScript        = "build-script"
+	AppNameRepoChecker        = "repo-checker"
+	AppNameRepoCheckerService = "repo-checker-service"
+	AppNameNginx              = "nginx"
+	AppNameNginxService       = "nginx-service"
+	ManagedByKey              = "app.kubernetes.io/managed-by"
+	AppNameKey                = "app.kubernetes.io/name"
+	InstanceKey               = "app.kubernetes.io/instance"
+	RepoCheckerPort           = 9090
+	RepoCheckerSuffix         = "-repo-checker"
+	BuildScriptName           = "build"
+	AfterBuildScriptName      = "after-build"
+	NginxPort                 = 8080
+	AnnChecksumConfig         = "checksum/config"
 )
 
 func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime.Scheme, nginxContainerImage string, repoCheckerContainerImage string, operatorNamespace string, revCli RevisionClient) *WebSiteReconciler {
@@ -237,7 +241,7 @@ func (r *WebSiteReconciler) reconcileScriptConfigMap(ctx context.Context, webSit
 	hash := fmt.Sprintf("%x", md5.Sum([]byte(script)))
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, cm, func() error {
-		setStandardLabels(&cm.ObjectMeta)
+		setStandardLabels(AppNameBuildScript, &cm.ObjectMeta)
 		if cm.Annotations == nil {
 			cm.Annotations = make(map[string]string)
 		}
@@ -269,14 +273,14 @@ func (r *WebSiteReconciler) reconcileRepoCheckerDeployment(ctx context.Context, 
 	deployment.SetName(webSite.Name + RepoCheckerSuffix)
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, deployment, func() error {
-		setStandardLabels(&deployment.ObjectMeta)
+		setStandardLabels(AppNameRepoChecker, &deployment.ObjectMeta)
 		deployment.Spec.Replicas = pointer.Int32Ptr(1)
 		deployment.Spec.Selector = &metav1.LabelSelector{}
 		if deployment.Spec.Selector.MatchLabels == nil {
 			deployment.Spec.Selector.MatchLabels = make(map[string]string)
 		}
 		deployment.Spec.Selector.MatchLabels[ManagedByKey] = OperatorName
-		deployment.Spec.Selector.MatchLabels[AppNameKey] = AppName
+		deployment.Spec.Selector.MatchLabels[AppNameKey] = AppNameRepoChecker
 
 		podTemplate, err := r.makePodTemplateForRepoChecker(webSite)
 		if err != nil {
@@ -314,7 +318,7 @@ func (r *WebSiteReconciler) makePodTemplateForRepoChecker(webSite *websitev1beta
 		}
 	}
 	newTemplate.Labels[ManagedByKey] = OperatorName
-	newTemplate.Labels[AppNameKey] = AppName
+	newTemplate.Labels[AppNameKey] = AppNameRepoChecker
 	newTemplate.Labels[InstanceKey] = webSite.Name + RepoCheckerSuffix
 
 	container := corev1.Container{
@@ -402,7 +406,7 @@ func (r *WebSiteReconciler) reconcileRepoCheckerService(ctx context.Context, web
 	service.SetName(webSite.Name + RepoCheckerSuffix)
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, service, func() error {
-		setStandardLabels(&service.ObjectMeta)
+		setStandardLabels(AppNameRepoCheckerService, &service.ObjectMeta)
 		ports := []corev1.ServicePort{
 			{
 				Name:       "repo-checker",
@@ -415,7 +419,7 @@ func (r *WebSiteReconciler) reconcileRepoCheckerService(ctx context.Context, web
 
 		service.Spec.Selector = make(map[string]string)
 		service.Spec.Selector[ManagedByKey] = OperatorName
-		service.Spec.Selector[AppNameKey] = AppName
+		service.Spec.Selector[AppNameKey] = AppNameRepoChecker
 		service.Spec.Selector[InstanceKey] = webSite.Name + RepoCheckerSuffix
 
 		return ctrl.SetControllerReference(webSite, service, r.scheme)
@@ -442,14 +446,14 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 	deployment.SetName(webSite.Name)
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, deployment, func() error {
-		setStandardLabels(&deployment.ObjectMeta)
+		setStandardLabels(AppNameNginx, &deployment.ObjectMeta)
 		deployment.Spec.Replicas = &webSite.Spec.Replicas
 		deployment.Spec.Selector = &metav1.LabelSelector{}
 		if deployment.Spec.Selector.MatchLabels == nil {
 			deployment.Spec.Selector.MatchLabels = make(map[string]string)
 		}
 		deployment.Spec.Selector.MatchLabels[ManagedByKey] = OperatorName
-		deployment.Spec.Selector.MatchLabels[AppNameKey] = AppName
+		deployment.Spec.Selector.MatchLabels[AppNameKey] = AppNameNginx
 
 		podTemplate, err := r.makeNginxPodTemplate(ctx, webSite, revision, hash)
 		if err != nil {
@@ -489,7 +493,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 	}
 
 	newTemplate.Labels[ManagedByKey] = OperatorName
-	newTemplate.Labels[AppNameKey] = AppName
+	newTemplate.Labels[AppNameKey] = AppNameNginx
 	newTemplate.Labels[InstanceKey] = webSite.Name
 	newTemplate.Annotations[AnnChecksumConfig] = hash
 
@@ -683,7 +687,7 @@ func (r *WebSiteReconciler) reconcileNginxService(ctx context.Context, webSite *
 				service.Annotations[k] = v
 			}
 		}
-		setStandardLabels(&service.ObjectMeta)
+		setStandardLabels(AppNameNginxService, &service.ObjectMeta)
 		ports := []corev1.ServicePort{
 			{
 				Name:       "nginx",
@@ -696,7 +700,7 @@ func (r *WebSiteReconciler) reconcileNginxService(ctx context.Context, webSite *
 
 		service.Spec.Selector = make(map[string]string)
 		service.Spec.Selector[ManagedByKey] = OperatorName
-		service.Spec.Selector[AppNameKey] = AppName
+		service.Spec.Selector[AppNameKey] = AppNameNginx
 		service.Spec.Selector[InstanceKey] = webSite.Name
 
 		return ctrl.SetControllerReference(webSite, service, r.scheme)
@@ -940,12 +944,12 @@ func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSi
 	return true, nil
 }
 
-func setStandardLabels(om *metav1.ObjectMeta) {
+func setStandardLabels(app string, om *metav1.ObjectMeta) {
 	if om.Labels == nil {
 		om.Labels = make(map[string]string)
 	}
 	om.Labels[ManagedByKey] = OperatorName
-	om.Labels[AppNameKey] = AppName
+	om.Labels[AppNameKey] = app
 }
 
 func selectReadyWebSite(obj client.Object) []string {

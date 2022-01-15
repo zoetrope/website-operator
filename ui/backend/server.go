@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/zoetrope/website-operator/controllers"
+
 	"github.com/cybozu-go/log"
 	"github.com/zoetrope/website-operator/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -52,9 +54,10 @@ func (s apiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type website struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
-	Ready     string `json:"ready"`
+	Status    string `json:"status"`
 	Revision  string `json:"revision"`
-	RepoURL   string `json:"url"`
+	RepoURL   string `json:"repo"`
+	PublicURL string `json:"public"`
 	Branch    string `json:"branch"`
 }
 
@@ -63,14 +66,20 @@ func (s apiServer) listWebSites(w http.ResponseWriter, r *http.Request) {
 	err := s.kubeClient.List(r.Context(), &websites)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	resp := make([]website, len(websites.Items))
 	for i, item := range websites.Items {
+		status, err := s.getStatus(r, item)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		resp[i] = website{
 			Namespace: item.Namespace,
 			Name:      item.Name,
-			Ready:     string(item.Status.Ready),
-			Revision:  item.Status.Revision[:7],
+			Status:    status,
+			Revision:  item.Status.Revision,
 			RepoURL:   item.Spec.RepoURL,
 			Branch:    item.Spec.Branch,
 		}
@@ -86,6 +95,31 @@ func (s apiServer) listWebSites(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s apiServer) getStatus(r *http.Request, website v1beta1.WebSite) (string, error) {
+	if website.Status.Ready != corev1.ConditionTrue {
+		return "NotReady", nil
+	}
+
+	var pods corev1.PodList
+	err := s.kubeClient.List(r.Context(), &pods, &client.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{
+			"app.kubernetes.io/instance":   website.Name,
+			"app.kubernetes.io/managed-by": "website-operator",
+		}),
+		Namespace: website.Namespace,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for _, pod := range pods.Items {
+		if pod.Status.Phase != corev1.PodRunning {
+			return "Error", nil
+		}
+	}
+	return "Ready", nil
+}
+
 func (s apiServer) getBuildLog(w http.ResponseWriter, r *http.Request) {
 	p := r.URL.Path[len("/api/v1/logs/"):]
 	params := strings.Split(p, "/")
@@ -99,6 +133,7 @@ func (s apiServer) getBuildLog(w http.ResponseWriter, r *http.Request) {
 	var pods corev1.PodList
 	err := s.kubeClient.List(r.Context(), &pods, &client.ListOptions{
 		LabelSelector: labels.SelectorFromSet(map[string]string{
+			"app.kubernetes.io/name":       controllers.AppNameNginx,
 			"app.kubernetes.io/instance":   resName,
 			"app.kubernetes.io/managed-by": "website-operator",
 		}),

@@ -33,16 +33,19 @@
                   Namespace
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  URL
+                  Repo
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Branch
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ready
+                  Status
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Revision
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Public
                 </th>
                 <th scope="col" class="relative px-6 py-3">
                   <span class="sr-only">Edit</span>
@@ -54,10 +57,11 @@
                 <tr>
                   <td class="px-6 py-4 whitespace-nowrap" x-text="website.name"></td>
                   <td class="px-6 py-4 whitespace-nowrap" x-text="website.namespace"></td>
-                  <td class="px-6 py-4 whitespace-nowrap" x-text="website.url"></td>
+                  <td class="px-6 py-4 whitespace-nowrap" x-text="website.repo"></td>
                   <td class="px-6 py-4 whitespace-nowrap" x-text="website.branch"></td>
-                  <td class="px-6 py-4 whitespace-nowrap" x-text="website.ready"></td>
+                  <td class="px-6 py-4 whitespace-nowrap" x-text="website.status"></td>
                   <td class="px-6 py-4 whitespace-nowrap" x-text="website.revision"></td>
+                  <td class="px-6 py-4 whitespace-nowrap" x-text="website.public"></td>
                   <td class="px-6 py-4 whitespace-nowrap ">
                     <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" @click="getLog(website.namespace, website.name)">Log</button>
                   </td>
