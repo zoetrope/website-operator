@@ -57,12 +57,16 @@
                 <tr>
                   <td class="px-6 py-4 whitespace-nowrap" x-text="website.name"></td>
                   <td class="px-6 py-4 whitespace-nowrap" x-text="website.namespace"></td>
-                  <td class="px-6 py-4 whitespace-nowrap" x-text="website.repo"></td>
+                  <td class="px-6 py-4 whitespace-nowrap" >
+                    <a class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" x-bind:href="website.repo" x-text="website.repo"></a>
+                  </td>
                   <td class="px-6 py-4 whitespace-nowrap" x-text="website.branch"></td>
                   <td class="px-6 py-4 whitespace-nowrap" x-text="website.status"></td>
                   <td class="px-6 py-4 whitespace-nowrap" x-text="website.revision"></td>
-                  <td class="px-6 py-4 whitespace-nowrap" x-text="website.public"></td>
-                  <td class="px-6 py-4 whitespace-nowrap ">
+                  <td class="px-6 py-4 whitespace-nowrap" >
+                    <a class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" x-bind:href="website.public" x-text="website.public"></a>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" @click="getLog(website.namespace, website.name)">Log</button>
                   </td>
                 </tr>

@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/zoetrope/website-operator/controllers"
-
 	"github.com/cybozu-go/log"
 	"github.com/zoetrope/website-operator/api/v1beta1"
+	"github.com/zoetrope/website-operator/controllers"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
@@ -75,12 +74,17 @@ func (s apiServer) listWebSites(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		rev := item.Status.Revision
+		if len(rev) > 7 {
+			rev = rev[:7]
+		}
 		resp[i] = website{
 			Namespace: item.Namespace,
 			Name:      item.Name,
 			Status:    status,
-			Revision:  item.Status.Revision,
+			Revision:  rev,
 			RepoURL:   item.Spec.RepoURL,
+			PublicURL: item.Spec.PublicURL,
 			Branch:    item.Spec.Branch,
 		}
 	}
@@ -114,10 +118,10 @@ func (s apiServer) getStatus(r *http.Request, website v1beta1.WebSite) (string, 
 
 	for _, pod := range pods.Items {
 		if pod.Status.Phase != corev1.PodRunning {
-			return "Error", nil
+			return string(pod.Status.Phase), nil
 		}
 	}
-	return "Ready", nil
+	return "Running", nil
 }
 
 func (s apiServer) getBuildLog(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +151,16 @@ func (s apiServer) getBuildLog(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	req := s.rawClient.CoreV1().Pods(ns).GetLogs(pods.Items[0].Name, &corev1.PodLogOptions{
+	latestPod := pods.Items[0]
+	creationTimestamp := latestPod.GetCreationTimestamp().Time
+	for _, pod := range pods.Items {
+		if pod.GetCreationTimestamp().After(creationTimestamp) {
+			latestPod = pod
+			creationTimestamp = pod.GetCreationTimestamp().Time
+		}
+	}
+
+	req := s.rawClient.CoreV1().Pods(ns).GetLogs(latestPod.GetName(), &corev1.PodLogOptions{
 		Container: "build",
 	})
 
