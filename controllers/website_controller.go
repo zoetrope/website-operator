@@ -3,6 +3,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"strings"
@@ -20,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -27,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	"sigs.k8s.io/yaml"
 )
@@ -42,6 +45,7 @@ const (
 	BuildScriptName      = "build"
 	AfterBuildScriptName = "after-build"
 	NginxPort            = 8080
+	AnnChecksumConfig    = "checksum/config"
 )
 
 func NewWebSiteReconciler(client client.Client, log logr.Logger, scheme *runtime.Scheme, nginxContainerImage string, repoCheckerContainerImage string, operatorNamespace string, revCli RevisionClient) *WebSiteReconciler {
@@ -130,14 +134,14 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 
 	isUpdatedAtLeastOnce := false
 
-	isUpdated, err := r.reconcileScriptConfigMap(ctx, webSite, &webSite.Spec.BuildScript, BuildScriptName, true)
+	isUpdated, buildScriptHash, err := r.reconcileScriptConfigMap(ctx, webSite, &webSite.Spec.BuildScript, BuildScriptName)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
 		log.Error(err, "failed to create ConfigMap for build script")
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	isUpdated, err = r.reconcileScriptConfigMap(ctx, webSite, webSite.Spec.AfterBuildScript, AfterBuildScriptName, true)
+	isUpdated, afterBuildScriptHash, err := r.reconcileScriptConfigMap(ctx, webSite, webSite.Spec.AfterBuildScript, AfterBuildScriptName)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
 		log.Error(err, "failed to create ConfigMap for after build script")
@@ -164,7 +168,7 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	isUpdated, err = r.reconcileNginxDeployment(ctx, webSite, revision)
+	isUpdated, err = r.reconcileNginxDeployment(ctx, webSite, revision, buildScriptHash)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
 		log.Error(err, "failed to create or update Deployment For Nginx")
@@ -185,7 +189,7 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	isUpdated, err = r.reconcileAfterBuildScript(ctx, webSite, revision)
+	isUpdated, err = r.reconcileAfterBuildScript(ctx, webSite, revision, afterBuildScriptHash)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err == errJobIsActive {
 		return isUpdatedAtLeastOnce, "", err
@@ -198,11 +202,11 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 	return isUpdatedAtLeastOnce, revision, nil
 }
 
-func (r *WebSiteReconciler) reconcileScriptConfigMap(ctx context.Context, webSite *websitev1beta1.WebSite, source *websitev1beta1.DataSource, scriptType string, required bool) (bool, error) {
+func (r *WebSiteReconciler) reconcileScriptConfigMap(ctx context.Context, webSite *websitev1beta1.WebSite, source *websitev1beta1.DataSource, scriptType string) (bool, string, error) {
 	log := r.log.WithValues("website", webSite.Name)
 
 	if source == nil {
-		return false, nil
+		return false, "", nil
 	}
 
 	script := ""
@@ -216,25 +220,29 @@ func (r *WebSiteReconciler) reconcileScriptConfigMap(ctx context.Context, webSit
 		}
 		err := r.client.Get(ctx, client.ObjectKey{Namespace: ns, Name: (*source.ConfigMap).Name}, buildScriptConfigMap)
 		if err != nil {
-			return false, err
+			return false, "", err
 		}
 		var ok bool
 		script, ok = buildScriptConfigMap.Data[(*source.ConfigMap).Key]
 		if !ok {
-			return false, fmt.Errorf("ConfigMap %s:%s does not have %s", ns, (*source.ConfigMap).Name, (*source.ConfigMap).Key)
+			return false, "", fmt.Errorf("ConfigMap %s:%s does not have %s", ns, (*source.ConfigMap).Name, (*source.ConfigMap).Key)
 		}
-	} else if required {
-		return false, errors.New("buildScript should not be empty")
 	} else {
-		return false, nil
+		return false, "", errors.New("buildScript should not be empty")
 	}
 
 	cm := &corev1.ConfigMap{}
 	cm.SetNamespace(webSite.Namespace)
 	cm.SetName(webSite.Name + "-" + scriptType + "-script")
+	hash := fmt.Sprintf("%x", md5.Sum([]byte(script)))
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, cm, func() error {
 		setStandardLabels(&cm.ObjectMeta)
+		if cm.Annotations == nil {
+			cm.Annotations = make(map[string]string)
+		}
+		cm.Annotations[AnnChecksumConfig] = hash
+
 		cm.Data = map[string]string{
 			scriptType + ".sh": script,
 		}
@@ -243,14 +251,14 @@ func (r *WebSiteReconciler) reconcileScriptConfigMap(ctx context.Context, webSit
 
 	if err != nil {
 		log.Error(err, "unable to reconcile build script configmap")
-		return false, err
+		return false, hash, err
 	}
 
 	if op != controllerutil.OperationResultNone {
 		log.Info("reconcile build script configmap successfully", "op", op)
-		return true, nil
+		return true, hash, nil
 	}
-	return false, nil
+	return false, hash, nil
 }
 
 func (r *WebSiteReconciler) reconcileRepoCheckerDeployment(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
@@ -427,7 +435,7 @@ func (r *WebSiteReconciler) reconcileRepoCheckerService(ctx context.Context, web
 
 var errRevisionNotReady = errors.New("latest revision not ready")
 
-func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (bool, error) {
+func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSite *websitev1beta1.WebSite, revision string, hash string) (bool, error) {
 	log := r.log.WithValues("website", webSite.Name)
 	deployment := &appsv1.Deployment{}
 	deployment.SetNamespace(webSite.Namespace)
@@ -443,7 +451,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 		deployment.Spec.Selector.MatchLabels[ManagedByKey] = OperatorName
 		deployment.Spec.Selector.MatchLabels[AppNameKey] = AppName
 
-		podTemplate, err := r.makeNginxPodTemplate(ctx, webSite, revision)
+		podTemplate, err := r.makeNginxPodTemplate(ctx, webSite, revision, hash)
 		if err != nil {
 			return err
 		}
@@ -466,7 +474,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 	return false, nil
 }
 
-func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (*corev1.PodTemplateSpec, error) {
+func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *websitev1beta1.WebSite, revision string, hash string) (*corev1.PodTemplateSpec, error) {
 	newTemplate := corev1.PodTemplateSpec{}
 
 	newTemplate.Labels = make(map[string]string)
@@ -483,6 +491,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 	newTemplate.Labels[ManagedByKey] = OperatorName
 	newTemplate.Labels[AppNameKey] = AppName
 	newTemplate.Labels[InstanceKey] = webSite.Name
+	newTemplate.Annotations[AnnChecksumConfig] = hash
 
 	newTemplate.Spec.Volumes = append(newTemplate.Spec.Volumes,
 		corev1.Volume{
@@ -781,7 +790,7 @@ func (r *WebSiteReconciler) extraResource(ctx context.Context, webSite *websitev
 
 var errJobIsActive = errors.New("job is active")
 
-func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSite *websitev1beta1.WebSite, revision string) (bool, error) {
+func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSite *websitev1beta1.WebSite, revision string, hash string) (bool, error) {
 	if webSite.Spec.AfterBuildScript == nil {
 		return false, nil
 	}
@@ -792,6 +801,8 @@ func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSi
 	job.SetNamespace(webSite.Namespace)
 	job.SetName(webSite.Name)
 	template := corev1.PodTemplateSpec{}
+	template.Annotations = make(map[string]string)
+	template.Annotations[AnnChecksumConfig] = hash
 	template.Spec.RestartPolicy = corev1.RestartPolicyNever
 	template.Spec.Volumes = append(template.Spec.Volumes,
 		corev1.Volume{
@@ -960,6 +971,40 @@ func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Source: ch,
 	}
 
+	logger := mgr.GetLogger().WithName("ConfigMap Handler")
+	cmHandler := func(o client.Object) []reconcile.Request {
+		wsl := &websitev1beta1.WebSiteList{}
+		err := r.client.List(ctx, wsl)
+		if err != nil {
+			logger.Error(err, "failed to list WebSites")
+			return nil
+		}
+		var requests []reconcile.Request
+		for _, ws := range wsl.Items {
+			if ws.Spec.BuildScript.ConfigMap != nil && ws.Spec.BuildScript.ConfigMap.Name == o.GetName() {
+				requests = append(requests, reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Namespace: ws.GetNamespace(),
+						Name:      ws.GetName(),
+					},
+				})
+				continue
+			}
+			if ws.Spec.AfterBuildScript != nil &&
+				ws.Spec.AfterBuildScript.ConfigMap != nil &&
+				ws.Spec.AfterBuildScript.ConfigMap.Name == o.GetName() {
+				requests = append(requests, reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Namespace: ws.GetNamespace(),
+						Name:      ws.GetName(),
+					},
+				})
+				continue
+			}
+		}
+		return requests
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&websitev1beta1.WebSite{}).
 		Owns(&corev1.Service{}).
@@ -967,5 +1012,6 @@ func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.ConfigMap{}).
 		Owns(&batchv1.Job{}).
 		Watches(&src, &handler.EnqueueRequestForObject{}).
+		Watches(&source.Kind{Type: &corev1.ConfigMap{}}, handler.EnqueueRequestsFromMapFunc(cmHandler)).
 		Complete(r)
 }
