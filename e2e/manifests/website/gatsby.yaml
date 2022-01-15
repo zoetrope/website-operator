@@ -4,13 +4,13 @@ metadata:
   name: gatsby-sample
   namespace: default
 spec:
-  buildImage: ghcr.io/zoetrope/node:14.17.6
+  buildImage: ghcr.io/zoetrope/node:16.13.2
   buildScript:
     configMap:
       name: build-scripts
       key: build-gatsby.sh
-  repoURL: https://github.com/zoetrope/gatsby-sample.git
-  branch: main
+  repoURL: https://github.com/gatsbyjs/gatsby-starter-default.git
+  branch: master
   extraResources:
     - configMap:
         name: httpproxy
