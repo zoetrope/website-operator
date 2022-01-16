@@ -5,6 +5,21 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2022-01-16
+
+### Added
+
+- Configure Renovate ([#22](https://github.com/zoetrope/website-operator/pull/22))
+- Install CLI tools with aqua ([#32](https://github.com/zoetrope/website-operator/pull/32))
+- Add Tiltfile ([#33](https://github.com/zoetrope/website-operator/pull/33))
+
+### Changed
+
+- Restart pod when a build script is changed ([#53](https://github.com/zoetrope/website-operator/pull/53))
+- Support Kubernetes v1.23 ([#20](https://github.com/zoetrope/website-operator/pull/20))
+- Renewal Web UI ([#21](https://github.com/zoetrope/website-operator/pull/21))
+- Improve Web UI ([#54](https://github.com/zoetrope/website-operator/pull/54))
+
 ## [0.3.1] - 2021-09-21
 
 ### Changed
@@ -25,21 +40,25 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.2.2] - 2021-03-04
 
 ### Added
+
 - Add namespace field for buildScript and extraResource([#13](https://github.com/zoetrope/website-operator/pull/13))
 
 ## [0.2.1] - 2021-03-04
 
 ### Added
+
 - Support imagePullSecrets ([#12](https://github.com/zoetrope/website-operator/pull/12))
 
 ## [0.2.0] - 2021-03-03
 
 ### Changed
+
 - Stop access to secret resources ([#11](https://github.com/zoetrope/website-operator/pull/11))
 
 ## [0.1.2] - 2021-03-03
 
 ### Changed
+
 - Support Kubernetes v1.20 ([#10](https://github.com/zoetrope/website-operator/pull/10))
 - Fixed the bug that repo-checker will fail to clone the target repository ([#9](https://github.com/zoetrope/website-operator/pull/9))
 
@@ -80,8 +99,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 This is the first public release.
 
-[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.3.1...HEAD
-[0.3.0]: https://github.com/zoetrope/website-operator/compare/v0.3.0...v0.3.1
+[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/zoetrope/website-operator/compare/v0.3.1...v0.4.0
+[0.3.1]: https://github.com/zoetrope/website-operator/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/zoetrope/website-operator/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/zoetrope/website-operator/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/zoetrope/website-operator/compare/v0.2.0...v0.2.1
