@@ -28,6 +28,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - uses: aquaproj/aqua-installer@v0.6.0
+        with:
+          aqua_version: v0.10.0
+          aqua_opts: ""
       - run: make build/install.yaml
       - name: Create release
         id: create_release

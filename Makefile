@@ -80,9 +80,9 @@ $(UI): $(GO_FILES)
 frontend:
 	cd ui/frontend && npm install && npm run build
 
-$(INSTALL_YAML): $(KUSTOMIZE)
+$(INSTALL_YAML):
 	mkdir -p build
-	$(KUSTOMIZE) build ./config/release > $@
+	kustomize build ./config/release > $@
 
 .PHONY: build-operator-image
 build-operator-image: $(WEBSITE_OPERATOR)
