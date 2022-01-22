@@ -8,7 +8,7 @@ require (
 	github.com/go-logr/logr v1.2.2
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.17.0
+	github.com/onsi/gomega v1.18.0
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
 	go.uber.org/zap v1.20.0
