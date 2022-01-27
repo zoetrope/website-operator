@@ -24,7 +24,7 @@ jobs:
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
       - uses: aquaproj/aqua-installer@v0.6.0
         with:
-          aqua_version: v0.10.1
+          aqua_version: v0.10.2
           aqua_opts: ""
       - run: |
           cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
@@ -48,7 +48,7 @@ jobs:
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
       - uses: aquaproj/aqua-installer@v0.6.0
         with:
-          aqua_version: v0.10.1
+          aqua_version: v0.10.2
           aqua_opts: ""
       - run: |
           cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
