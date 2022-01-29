@@ -54,7 +54,7 @@ test: manifests generate setup-envtest ## fmt vet ## Run tests.
 	source <($(SETUP_ENVTEST) use -p env); go test -v -count 1 ./...
 
 .PHONY: dev
-dev:
+dev: controller-gen
 	ctlptl apply -f ./cluster.yaml
 	$(MAKE) -C ./e2e/ setup-cluster
 

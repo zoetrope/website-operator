@@ -32,6 +32,8 @@ jobs:
         with:
           aqua_version: v0.10.2
           aqua_opts: ""
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: make build/install.yaml
       - name: Create release
         id: create_release
