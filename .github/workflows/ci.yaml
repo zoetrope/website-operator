@@ -26,6 +26,8 @@ jobs:
         with:
           aqua_version: v0.10.2
           aqua_opts: ""
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
           ${{ secrets.DEPLOY_KEY }}
@@ -50,6 +52,8 @@ jobs:
         with:
           aqua_version: v0.10.2
           aqua_opts: ""
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           cat > ./e2e/manifests/website/.ssh/id_rsa <<EOF
           ${{ secrets.DEPLOY_KEY }}
@@ -62,6 +66,28 @@ jobs:
         run: |
           kubectl get pod
           kubectl describe pod
+  tilt:
+    name: Run tilt ci
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.go-version }}
+      - name: Cache Tools
+        id: cache-aqua-tools
+        uses: actions/cache@v2
+        with:
+          path: ~/.local/share/aquaproj-aqua
+          key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
+      - uses: aquaproj/aqua-installer@v0.7.0
+        with:
+          aqua_version: v0.10.2
+          aqua_opts: ""
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: make dev
+      - run: tilt ci
   deploy:
     name: Deploy the latest image
     runs-on: ubuntu-20.04
