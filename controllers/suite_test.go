@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	"go.uber.org/zap/zapcore"
@@ -69,7 +69,7 @@ var _ = BeforeSuite(func() {
 	err = k8sClient.Create(context.Background(), ns)
 	Expect(err).NotTo(HaveOccurred())
 
-}, 60)
+})
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
