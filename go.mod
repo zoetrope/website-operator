@@ -11,7 +11,7 @@ require (
 	github.com/onsi/gomega v1.18.1
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
-	go.uber.org/zap v1.20.0
+	go.uber.org/zap v1.21.0
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	k8s.io/api v0.23.3
