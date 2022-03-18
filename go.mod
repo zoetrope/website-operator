@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/cybozu-go/log v1.6.1
 	github.com/cybozu-go/well v1.11.0
-	github.com/go-logr/logr v1.2.2
+	github.com/go-logr/logr v1.2.3
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/onsi/gomega v1.18.1
