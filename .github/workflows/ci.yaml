@@ -18,7 +18,7 @@ jobs:
           go-version: ${{ env.go-version }}
       - name: Cache Tools
         id: cache-aqua-tools
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.local/share/aquaproj-aqua
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
@@ -44,7 +44,7 @@ jobs:
           go-version: ${{ env.go-version }}
       - name: Cache Tools
         id: cache-aqua-tools
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.local/share/aquaproj-aqua
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
@@ -76,7 +76,7 @@ jobs:
           go-version: ${{ env.go-version }}
       - name: Cache Tools
         id: cache-aqua-tools
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.local/share/aquaproj-aqua
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
