@@ -7,7 +7,7 @@ registries:
 
 packages:
   - name: kubernetes/kubectl@v1.23.6
-  - name: kubernetes-sigs/kubebuilder@v3.3.0
+  - name: kubernetes-sigs/kubebuilder@v3.4.1
   - name: kubernetes-sigs/kustomize@kustomize/v4.5.4
   - name: kubernetes-sigs/kind@v0.12.0
   - name: tilt-dev/tilt@v0.28.1
