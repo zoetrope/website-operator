@@ -2,7 +2,8 @@
   "extends": [
     "config:base",
     "github>aquaproj/aqua-renovate-config#0.1.10",
-    ":timezone(Asia/Tokyo)"
+    ":timezone(Asia/Tokyo)",
+    "schedule:weekly"
   ],
   "postUpdateOptions": [
     "gomodTidy"
