@@ -6,10 +6,10 @@ CRD_OPTIONS = "crd:crdVersions=v1"
 
 BIN_DIR := $(shell pwd)/bin
 
-WEBSITE_OPERATOR = build/website-operator
-REPO_CHECKER = build/repo-checker
-UI = build/ui
-INSTALL_YAML = build/install.yaml
+WEBSITE_OPERATOR = bin/website-operator
+REPO_CHECKER = bin/repo-checker
+UI = bin/ui
+INSTALL_YAML = bin/install.yaml
 GO_FILES := $(shell find . -type f -name '*.go')
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
@@ -43,6 +43,14 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
+.PHONY: install
+install: manifests ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+	kustomize build config/crd | kubectl apply -f -
+
+.PHONY: uninstall
+uninstall: manifests ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	kustomize build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
@@ -65,23 +73,23 @@ stop-dev:
 ##@ Build
 
 $(WEBSITE_OPERATOR): $(GO_FILES) generate
-	mkdir -p build
-	go build -o $@ ./cmd/website-operator
+	mkdir -p bin
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@ ./cmd/website-operator
 
 $(REPO_CHECKER): $(GO_FILES)
-	mkdir -p build
-	go build -o $@ ./cmd/repo-checker
+	mkdir -p bin
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@ ./cmd/repo-checker
 
 $(UI): $(GO_FILES)
-	mkdir -p build
-	go build -o $@ ./cmd/ui
+	mkdir -p bin
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@ ./cmd/ui
 
 .PHONY: frontend
 frontend:
 	cd ui/frontend && npm install && npm run build
 
 $(INSTALL_YAML):
-	mkdir -p build
+	mkdir -p bin
 	kustomize build ./config/release > $@
 
 .PHONY: build-operator-image
@@ -132,6 +140,5 @@ setup-envtest: ## Download setup-envtest locally if necessary
 .PHONY: clean
 clean:
 	rm -rf ./bin
-	rm -rf ./build
 	rm -f ./docker/website-operator/website-operator
 	rm -f ./docker/repo-checker/repo-checker
