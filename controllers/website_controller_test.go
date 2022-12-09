@@ -534,7 +534,7 @@ func newWebSite() *websiteBuilder {
 			Namespace: "test",
 		},
 		Spec: websitev1beta1.WebSiteSpec{
-			BuildImage: "ghcr.io/zoetrope/node:16.13.2",
+			BuildImage: "ghcr.io/zoetrope/node:18.12.1",
 			RepoURL:    "https://github.com/zoetrope/honkit-sample.git",
 			Branch:     "main",
 		},
