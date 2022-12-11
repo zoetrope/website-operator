@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "autoprefixer": "10.4.13",
-    "parcel": "2.6.2",
+    "parcel": "2.8.1",
     "postcss": "8.4.19",
     "postcss-import": "14.1.0"
   }
