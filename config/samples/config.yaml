@@ -13,7 +13,6 @@ data:
 
     rm -rf $OUTPUT/*
     cp -r _book/* $OUTPUT/
-    cp -r assets/* $OUTPUT/assets/
 kind: ConfigMap
 metadata:
   name: build-scripts
