@@ -10,4 +10,3 @@ npm run build
 
 rm -rf $OUTPUT/*
 cp -r _book/* $OUTPUT/
-cp -r assets/* $OUTPUT/assets/
