@@ -21,7 +21,7 @@ jobs:
         with:
           path: ~/.local/share/aquaproj-aqua
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
-      - uses: aquaproj/aqua-installer@v1.1.2
+      - uses: aquaproj/aqua-installer@v1.2.0
         with:
           aqua_version: v1.25.0
           aqua_opts: ""
@@ -47,7 +47,7 @@ jobs:
         with:
           path: ~/.local/share/aquaproj-aqua
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
-      - uses: aquaproj/aqua-installer@v1.1.2
+      - uses: aquaproj/aqua-installer@v1.2.0
         with:
           aqua_version: v1.25.0
           aqua_opts: ""
@@ -79,7 +79,7 @@ jobs:
         with:
           path: ~/.local/share/aquaproj-aqua
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
-      - uses: aquaproj/aqua-installer@v1.1.2
+      - uses: aquaproj/aqua-installer@v1.2.0
         with:
           aqua_version: v1.25.0
           aqua_opts: ""
