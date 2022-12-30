@@ -23,7 +23,7 @@ jobs:
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
       - uses: aquaproj/aqua-installer@v2.0.2
         with:
-          aqua_version: v1.27.0
+          aqua_version: v1.28.0
           aqua_opts: ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,7 +49,7 @@ jobs:
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
       - uses: aquaproj/aqua-installer@v2.0.2
         with:
-          aqua_version: v1.27.0
+          aqua_version: v1.28.0
           aqua_opts: ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -81,7 +81,7 @@ jobs:
           key: cache-${{ env.cache-version }}-tools-${{ hashFiles('aqua.yaml') }}
       - uses: aquaproj/aqua-installer@v2.0.2
         with:
-          aqua_version: v1.27.0
+          aqua_version: v1.28.0
           aqua_opts: ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
