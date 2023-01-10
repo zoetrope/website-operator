@@ -7,7 +7,7 @@ require (
 	github.com/cybozu-go/well v1.11.1
 	github.com/go-logr/logr v1.2.3
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/onsi/ginkgo/v2 v2.6.1
+	github.com/onsi/ginkgo/v2 v2.7.0
 	github.com/onsi/gomega v1.24.2
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
