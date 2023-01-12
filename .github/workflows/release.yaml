@@ -41,7 +41,7 @@ jobs:
           aqua_opts: ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: make build/install.yaml
+      - run: make bin/install.yaml
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -60,6 +60,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/install.yaml
+          asset_path: ./bin/install.yaml
           asset_name: install.yaml
           asset_content_type: application/x-yaml
