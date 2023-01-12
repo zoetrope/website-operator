@@ -36,12 +36,12 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	controller-gen $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+generate: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: install
 install: manifests ## Install CRDs into the K8s cluster specified in ~/.kube/config.
@@ -62,7 +62,7 @@ test: manifests generate setup-envtest ## fmt vet ## Run tests.
 	source <($(SETUP_ENVTEST) use -p env); go test -v -count 1 ./...
 
 .PHONY: dev
-dev: controller-gen
+dev:
 	ctlptl apply -f ./cluster.yaml
 	$(MAKE) -C ./e2e/ setup-cluster
 
@@ -123,13 +123,7 @@ push-ui-image:
 	docker push ${REGISTRY}website-operator-ui:${TAG}
 
 .PHONY: setup
-setup: setup-envtest controller-gen
-
-CONTROLLER_GEN := $(BIN_DIR)/controller-gen
-.PHONY: controller-gen
-controller-gen:
-	mkdir -p $(BIN_DIR)
-	GOBIN=$(BIN_DIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen
+setup: setup-envtest
 
 SETUP_ENVTEST := $(BIN_DIR)/setup-envtest
 .PHONY: setup-envtest

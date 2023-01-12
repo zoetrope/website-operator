@@ -7,5 +7,14 @@
   "postUpdateOptions": [
     "gomodTidy"
   ],
-  "automerge": true
+  "automerge": true,
+  "packageRules": [
+    {
+      "matchPackagePatterns": [
+        "k8s",
+        "kubernetes"
+      ],
+      "dependencyDashboardApproval": true
+    }
+  ]
 }
