@@ -12,6 +12,12 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
+      - uses: aquaproj/aqua-installer@v2.0.2
+        with:
+          aqua_version: v1.30.4
+          aqua_opts: ""
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: TAG=${GITHUB_REF#refs/tags/v} make build-operator-image
       - run: TAG=${GITHUB_REF#refs/tags/v} make build-checker-image
       - run: TAG=${GITHUB_REF#refs/tags/v} make build-ui-image
