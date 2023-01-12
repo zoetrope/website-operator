@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2023-01-12
+
+- Update dependencies
+
 ## [0.4.0] - 2022-01-16
 
 ### Added
@@ -99,7 +103,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 This is the first public release.
 
-[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/zoetrope/website-operator/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/zoetrope/website-operator/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/zoetrope/website-operator/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/zoetrope/website-operator/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/zoetrope/website-operator/compare/v0.2.2...v0.3.0
