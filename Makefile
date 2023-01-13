@@ -8,14 +8,14 @@ BIN_DIR := $(shell pwd)/bin
 
 WEBSITE_OPERATOR = bin/website-operator
 REPO_CHECKER = bin/repo-checker
-UI = bin/ui
-INSTALL_YAML = bin/install.yaml
+WEBSITE_OPERATOR_UI = bin/website-operator-ui
+INSTALL_YAML = build/install.yaml
 GO_FILES := $(shell find . -type f -name '*.go')
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 
 
-all: $(WEBSITE_OPERATOR) $(REPO_CHECKER) $(UI)
+all: $(WEBSITE_OPERATOR) $(REPO_CHECKER) $(WEBSITE_OPERATOR_UI)
 
 ##@ General
 
@@ -80,47 +80,29 @@ $(REPO_CHECKER): $(GO_FILES)
 	mkdir -p bin
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@ ./cmd/repo-checker
 
-$(UI): $(GO_FILES)
+$(WEBSITE_OPERATOR_UI): $(GO_FILES)
 	mkdir -p bin
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@ ./cmd/ui
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@ ./cmd/website-operator-ui
 
 .PHONY: frontend
 frontend:
 	cd ui/frontend && npm install && npm run build
 
 $(INSTALL_YAML):
-	mkdir -p bin
+	mkdir -p build
 	kustomize build ./config/release > $@
 
 .PHONY: build-operator-image
 build-operator-image: $(WEBSITE_OPERATOR)
-	cp $(WEBSITE_OPERATOR) ./docker/website-operator
-	docker build --no-cache -t ${REGISTRY}website-operator:${TAG} ./docker/website-operator
-
-.PHONY: push-operator-image
-push-operator-image:
-	docker push ${REGISTRY}website-operator:${TAG}
+	docker build --no-cache -t ${REGISTRY}website-operator:${TAG} -f Dockerfile .
 
 .PHONY: build-checker-image
 build-checker-image: $(REPO_CHECKER)
-	cp $(REPO_CHECKER) ./docker/repo-checker
-	docker build --no-cache -t ${REGISTRY}repo-checker:${TAG} ./docker/repo-checker
-
-.PHONY: push-checker-image
-push-checker-image:
-	docker push ${REGISTRY}repo-checker:${TAG}
+	docker build --no-cache -t ${REGISTRY}repo-checker:${TAG} -f Dockerfile.repo-checker .
 
 .PHONY: build-ui-image
-build-ui-image: $(UI) frontend
-	rm -f ./docker/ui/ui
-	cp $(UI) ./docker/ui
-	rm -rf ./docker/ui/dist
-	cp -r ui/frontend/dist ./docker/ui/
-	docker build --no-cache -t ${REGISTRY}website-operator-ui:${TAG} ./docker/ui
-
-.PHONY: push-ui-image
-push-ui-image:
-	docker push ${REGISTRY}website-operator-ui:${TAG}
+build-ui-image: $(WEBSITE_OPERATOR_UI)
+	docker build --no-cache -t ${REGISTRY}website-operator-ui:${TAG} -f Dockerfile.ui .
 
 .PHONY: setup
 setup: setup-envtest

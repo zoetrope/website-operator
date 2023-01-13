@@ -1,6 +1,6 @@
 package website
 
-const (
+var (
 	// Version is the WebSite-Operator version
-	Version = "0.5.0"
+	Version = "unset"
 )

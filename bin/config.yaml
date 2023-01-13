@@ -1,0 +1,219 @@
+project_name: website-operator
+release:
+  github:
+    owner: zoetrope
+    name: website-operator
+  name_template: '{{.Tag}}'
+scoop:
+  name: website-operator
+  commit_author:
+    name: goreleaserbot
+    email: bot@goreleaser.com
+  commit_msg_template: Scoop update for {{ .ProjectName }} version {{ .Tag }}
+  goamd64: v1
+builds:
+  - id: website-operator
+    goos:
+      - linux
+    goarch:
+      - amd64
+    goarm:
+      - "6"
+    gomips:
+      - hardfloat
+    goamd64:
+      - v1
+    targets:
+      - linux_amd64_v1
+    dir: .
+    main: ./cmd/website-operator
+    binary: website-operator
+    builder: go
+    gobinary: go
+    command: build
+    ldflags:
+      - -X github.com/zoetrope/website-operator.Version={{.Version}}
+    env:
+      - CGO_ENABLED=0
+  - id: website-operator-ui
+    goos:
+      - linux
+    goarch:
+      - amd64
+    goarm:
+      - "6"
+    gomips:
+      - hardfloat
+    goamd64:
+      - v1
+    targets:
+      - linux_amd64_v1
+    dir: .
+    main: ./cmd/website-operator-ui
+    binary: website-operator-ui
+    builder: go
+    gobinary: go
+    command: build
+    ldflags:
+      - -X github.com/zoetrope/website-operator.Version={{.Version}}
+    env:
+      - CGO_ENABLED=0
+  - id: repo-checker
+    goos:
+      - linux
+    goarch:
+      - amd64
+    goarm:
+      - "6"
+    gomips:
+      - hardfloat
+    goamd64:
+      - v1
+    targets:
+      - linux_amd64_v1
+    dir: .
+    main: ./cmd/repo-checker
+    binary: repo-checker
+    builder: go
+    gobinary: go
+    command: build
+    ldflags:
+      - -X github.com/zoetrope/website-operator.Version=v8
+    env:
+      - CGO_ENABLED=0
+archives:
+  - id: default
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}'
+    format: tar.gz
+    rlcp: true
+    files:
+      - src: ./build/install.yaml
+snapshot:
+  name_template: dev
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+dockers:
+  - ids:
+      - website-operator
+    goos: linux
+    goarch: amd64
+    goarm: "6"
+    goamd64: v1
+    dockerfile: ./Dockerfile
+    image_templates:
+      - ghcr.io/zoetrope/website-operator:{{ .Version }}
+    extra_files:
+      - LICENSE
+    build_flag_templates:
+      - --platform=linux/amd64
+      - --label=org.opencontainers.image.created={{.Date}}
+      - --label=org.opencontainers.image.revision={{.FullCommit}}
+      - --label=org.opencontainers.image.version={{.Version}}
+    use: buildx
+  - ids:
+      - website-operator-ui
+    goos: linux
+    goarch: amd64
+    goarm: "6"
+    goamd64: v1
+    dockerfile: ./Dockerfile.ui
+    image_templates:
+      - ghcr.io/zoetrope/website-operator-ui:{{ .Version }}
+    extra_files:
+      - LICENSE
+      - ui/frontend/dist
+    build_flag_templates:
+      - --platform=linux/amd64
+      - --label=org.opencontainers.image.created={{.Date}}
+      - --label=org.opencontainers.image.revision={{.FullCommit}}
+      - --label=org.opencontainers.image.version={{.Version}}
+    use: buildx
+  - ids:
+      - repo-checker
+    goos: linux
+    goarch: amd64
+    goarm: "6"
+    goamd64: v1
+    dockerfile: ./Dockerfile.repo-checker
+    image_templates:
+      - ghcr.io/zoetrope/repo-checker:{{ .Version }}
+    extra_files:
+      - LICENSE
+    build_flag_templates:
+      - --platform=linux/amd64
+      - --label=org.opencontainers.image.created={{.Date}}
+      - --label=org.opencontainers.image.revision={{.FullCommit}}
+      - --label=org.opencontainers.image.version={{.Version}}
+    use: buildx
+docker_manifests:
+  - name_template: ghcr.io/zoetrope/website-operator:{{ .Version }}
+    image_templates:
+      - ghcr.io/zoetrope/website-operator:{{ .Version }}
+    use: docker
+  - name_template: ghcr.io/zoetrope/website-operator-ui:{{ .Version }}
+    image_templates:
+      - ghcr.io/zoetrope/website-operator-ui:{{ .Version }}
+    use: docker
+  - name_template: ghcr.io/zoetrope/repo-checker:{{ .Version }}
+    image_templates:
+      - ghcr.io/zoetrope/repo-checker:{{ .Version }}
+    use: docker
+changelog:
+  use: github-native
+dist: bin/
+env_files:
+  github_token: ~/.config/goreleaser/github_token
+  gitlab_token: ~/.config/goreleaser/gitlab_token
+  gitea_token: ~/.config/goreleaser/gitea_token
+before:
+  hooks:
+    - make frontend
+    - make build/install.yaml
+source:
+  name_template: '{{ .ProjectName }}-{{ .Version }}'
+  format: tar.gz
+gomod:
+  gobinary: go
+announce:
+  twitter:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+  mastodon:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    server: ""
+  reddit:
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    url_template: '{{ .ReleaseURL }}'
+  slack:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    username: GoReleaser
+  discord:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    author: GoReleaser
+    color: "3888754"
+    icon_url: https://goreleaser.com/static/avatar.png
+  teams:
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    color: '#2D313E'
+    icon_url: https://goreleaser.com/static/avatar.png
+  smtp:
+    subject_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    body_template: 'You can view details from: {{ .ReleaseURL }}'
+  mattermost:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    username: GoReleaser
+  linkedin:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+  telegram:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+  webhook:
+    message_template: '{ "message": "{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}"}'
+    content_type: application/json; charset=utf-8
+git:
+  tag_sort: -version:refname
+github_urls:
+  download: https://github.com
+gitlab_urls:
+  download: https://gitlab.com

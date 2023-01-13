@@ -1,0 +1,101 @@
+project_name: website-operator
+dist: bin/
+builds:
+  - id: website-operator
+    env:
+      - CGO_ENABLED=0
+    main: ./cmd/website-operator
+    binary: website-operator
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -X github.com/zoetrope/website-operator.Version={{.Version}}
+  - id: website-operator-ui
+    env:
+      - CGO_ENABLED=0
+    main: ./cmd/website-operator-ui
+    binary: website-operator-ui
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -X github.com/zoetrope/website-operator.Version={{.Version}}
+  - id: repo-checker
+    env:
+      - CGO_ENABLED=0
+    main: ./cmd/repo-checker
+    binary: repo-checker
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -X github.com/zoetrope/website-operator.Version={{.Version}}
+before:
+  hooks:
+    - make frontend
+    - make build/install.yaml
+dockers:
+  - image_templates:
+      - "ghcr.io/zoetrope/website-operator:{{ .Version }}"
+    use: buildx
+    dockerfile: ./Dockerfile
+    ids:
+      - website-operator
+    extra_files:
+      - LICENSE
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+  - image_templates:
+      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}"
+    use: buildx
+    dockerfile: ./Dockerfile.ui
+    ids:
+      - website-operator-ui
+    extra_files:
+      - LICENSE
+      - ui/frontend/dist
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+  - image_templates:
+    - "ghcr.io/zoetrope/repo-checker:{{ .Version }}"
+    use: buildx
+    dockerfile: ./Dockerfile.repo-checker
+    ids:
+      - repo-checker
+    extra_files:
+      - LICENSE
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+docker_manifests:
+  - name_template: "ghcr.io/zoetrope/website-operator:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/zoetrope/website-operator:{{ .Version }}"
+  - name_template: "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}"
+  - name_template: "ghcr.io/zoetrope/repo-checker:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}"
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "dev"
+changelog:
+  use: github-native
+archives:
+  - files:
+      - ./build/install.yaml
+    rlcp: true

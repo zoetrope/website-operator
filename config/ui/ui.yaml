@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - command:
-            - /ui
+            - /website-operator-ui
           args:
             - --allow-cors=true
           image: ghcr.io/zoetrope/website-operator-ui:dev

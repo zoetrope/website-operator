@@ -1,0 +1,29 @@
+changelog:
+  categories:
+    - title: Features
+      labels:
+        - enhancement
+    - title: Bug Fixes
+      labels:
+        - bug
+    - title: Deprecated
+      labels:
+        - deprecate
+    - title: Removed
+      labels:
+        - remove
+    - title: Security
+      labels:
+        - security
+    - title: Dependencies
+      labels:
+        - dependencies
+    - title: Chores
+      labels:
+        - ci
+        - documentation
+        - refactoring
+        - test
+    - title: Others
+      labels:
+        - "*"
