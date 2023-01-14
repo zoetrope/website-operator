@@ -15,8 +15,8 @@ CMD ["/repo-checker"]
 UI_DOCKERFILE = '''FROM golang:alpine
 WORKDIR /
 COPY ./ui/frontend/dist/* /dist/
-COPY ./bin/ui /
-CMD ["/ui"]
+COPY ./bin/website-operator-ui /
+CMD ["/website-operator-ui"]
 '''
 
 # Generate manifests and go files
@@ -42,8 +42,8 @@ local_resource('Watch&Compile website-operator', "make bin/website-operator", de
 repochecker_deps = ['checker', 'cmd/repo-checker', 'version.go', 'constants.go']
 local_resource('Watch&Compile repo-checker', "make bin/repo-checker", deps=repochecker_deps)
 
-ui_deps = ['ui', 'cmd/ui', 'version.go', 'constants.go']
-local_resource('Watch&Compile ui', "make frontend; make bin/ui", deps=ui_deps, ignore=['ui/frontend/node_modules', 'ui/frontend/dist', 'ui/frontend/.parcel-cache', 'ui/frontend/package*'])
+ui_deps = ['ui', 'cmd/website-operator-ui', 'version.go', 'constants.go']
+local_resource('Watch&Compile website-operator-ui', "make frontend; make bin/website-operator-ui", deps=ui_deps, ignore=['ui/frontend/node_modules', 'ui/frontend/dist', 'ui/frontend/.parcel-cache', 'ui/frontend/package*'])
 
 local_resource('Sample YAML', 'kubectl apply -f ./config/samples', deps=["./config/samples"], resource_deps=[DIRNAME + "-controller-manager"])
 
@@ -64,10 +64,10 @@ docker_build('repo-checker:dev', '.',
 
 docker_build_with_restart('website-operator-ui:dev', '.',
  dockerfile_contents=UI_DOCKERFILE,
- entrypoint=['/ui'],
- only=['./bin/ui', './ui/frontend/dist'],
+ entrypoint=['/website-operator-ui'],
+ only=['./bin/website-operator-ui', './ui/frontend/dist'],
  live_update=[
-       sync('./bin/ui', '/ui'),
+       sync('./bin/website-operator-ui', '/website-operator-ui'),
        sync('./ui/frontend/dist', '/dist'),
    ]
 )

@@ -6,6 +6,7 @@ registries:
     ref: v3.120.0 # renovate: depName=aquaproj/aqua-registry
 
 packages:
+  - name: goreleaser/goreleaser@v1.14.1
   - name: kubernetes-sigs/controller-tools/controller-gen@v0.11.1
   - name: kubernetes-sigs/kind@v0.17.0
   - name: kubernetes-sigs/kubebuilder@v3.8.0

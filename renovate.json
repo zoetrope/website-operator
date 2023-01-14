@@ -1,20 +1,25 @@
 {
+  "automerge": true,
   "extends": [
     "config:base",
     "github>aquaproj/aqua-renovate-config#1.5.1",
-    ":timezone(Asia/Tokyo)"
+    ":semanticCommitTypeAll(chore)",
+    ":timezone(Asia/Tokyo)",
+    "schedule:weekly"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "packageRules": [
+    {
+      "dependencyDashboardApproval": true,
+      "matchPackagePatterns": [
+        ".*k8s.*",
+        ".*kubernetes.*"
+      ]
+    }
   ],
   "postUpdateOptions": [
     "gomodTidy"
-  ],
-  "automerge": true,
-  "packageRules": [
-    {
-      "matchPackagePatterns": [
-        "k8s",
-        "kubernetes"
-      ],
-      "dependencyDashboardApproval": true
-    }
   ]
 }

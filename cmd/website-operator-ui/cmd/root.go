@@ -15,7 +15,7 @@ var config struct {
 }
 
 var rootCmd = &cobra.Command{
-	Use:     "ui",
+	Use:     "website-operator-ui",
 	Version: website.Version,
 	Short:   "Web UI for WebSite Operator",
 	Long:    `Web UI for WebSite Operator.`,

@@ -23,32 +23,20 @@ test: launch-kind load-images setup-cluster
 	kustomize build ./manifests/manager | kubectl apply -f -
 	kubectl wait pod -l control-plane=controller-manager -n website-operator-system --for condition=Ready --timeout 180s
 	kustomize build ./manifests/website | kubectl apply -f -
-	env E2E_TEST=1 go test -count=1 -v . -args -ginkgo.progress -ginkgo.v -ginkgo.failFast
+	env E2E_TEST=1 go test -count=1 -v . -args -ginkgo.v -ginkgo.fail-fast
 
 .PHONY: load-images
-load-images: load-operator-images load-checker-image load-ui-image
-
-.PHONY: load-operator-images
-load-operator-images:
-	cd ../ && make build-operator-image TAG=dev
+load-images:
+	cd ../ && goreleaser release --rm-dist --snapshot --skip-publish
 	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)website-operator:dev); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
 		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator:dev; \
 	fi
-
-.PHONY: load-checker-images
-load-checker-image:
-	cd ../ && make build-checker-image TAG=dev
 	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)repo-checker:dev); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
 		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)repo-checker:dev; \
 	fi
-
-.PHONY: load-ui-images
-load-ui-image:
-	cd ../ && make build-ui-image TAG=dev
 	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)website-operator-ui:dev); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
 		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator-ui:dev; \
 	fi
-
