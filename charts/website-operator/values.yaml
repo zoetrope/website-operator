@@ -1,0 +1,26 @@
+controller:
+  image:
+    repository: ghcr.io/zoetrope/website-operator
+    tag: 0.5.0
+  replicas: 1
+  config:
+    health:
+      healthProbeBindAddress: :8081
+    leaderElection:
+      leaderElect: true
+      resourceName: website-operator
+    metrics:
+      bindAddress: 127.0.0.1:8080
+ui:
+  image:
+    repository: ghcr.io/zoetrope/website-operator-ui
+    tag: 0.5.0
+  replicas: 1
+  service:
+    ports:
+      - name: web
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+    type: ClusterIP
+kubernetesClusterDomain: cluster.local

@@ -38,6 +38,11 @@ help: ## Display this help.
 .PHONY: manifests
 manifests: ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	controller-gen $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	kustomize build config/helm/crds | yq e "." - > charts/website-operator/crds/website.yaml
+
+.PHONY: generate-chart
+generate-chart:
+	kustomize build config/release | helmify -crd-dir charts/website-operator
 
 .PHONY: generate
 generate: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
