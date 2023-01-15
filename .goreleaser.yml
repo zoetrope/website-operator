@@ -37,7 +37,6 @@ builds:
 before:
   hooks:
     - make frontend
-    - make build/install.yaml
 dockers:
   - image_templates:
       - "ghcr.io/zoetrope/website-operator:{{ .Version }}"
@@ -95,7 +94,3 @@ snapshot:
   name_template: "dev"
 changelog:
   use: github-native
-archives:
-  - files:
-      - ./build/install.yaml
-    rlcp: true

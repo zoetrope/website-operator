@@ -14,7 +14,9 @@ All resources (Namespace, CustomResourceDefinitions, Deployment and RBACs) are i
 You can just install the manifest as follows:
 
 ```console
-kubectl apply -f https://github.com/zoetrope/website-operator/releases/latest/download/install.yaml
+helm repo add website-operator https://zoetrope.github.io/website-operator
+helm repo update
+helm install --create-namespace --namespace website-operator-system website-operator website-operator/website-operator
 ```
 
 ## Usage
