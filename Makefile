@@ -9,7 +9,6 @@ BIN_DIR := $(shell pwd)/bin
 WEBSITE_OPERATOR = bin/website-operator
 REPO_CHECKER = bin/repo-checker
 WEBSITE_OPERATOR_UI = bin/website-operator-ui
-INSTALL_YAML = build/install.yaml
 GO_FILES := $(shell find . -type f -name '*.go')
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
@@ -38,6 +37,11 @@ help: ## Display this help.
 .PHONY: manifests
 manifests: ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	controller-gen $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	kustomize build config/crd | yq e "." - > charts/website-operator/crds/website-crd.yaml
+
+.PHONY: generate-chart
+generate-chart:
+	kustomize build config/release | helmify -crd-dir charts/website-operator
 
 .PHONY: generate
 generate: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -88,22 +92,6 @@ $(WEBSITE_OPERATOR_UI): $(GO_FILES)
 frontend:
 	cd ui/frontend && npm install && npm run build
 
-$(INSTALL_YAML):
-	mkdir -p build
-	kustomize build ./config/release > $@
-
-.PHONY: build-operator-image
-build-operator-image: $(WEBSITE_OPERATOR)
-	docker build --no-cache -t ${REGISTRY}website-operator:${TAG} -f Dockerfile .
-
-.PHONY: build-checker-image
-build-checker-image: $(REPO_CHECKER)
-	docker build --no-cache -t ${REGISTRY}repo-checker:${TAG} -f Dockerfile.repo-checker .
-
-.PHONY: build-ui-image
-build-ui-image: $(WEBSITE_OPERATOR_UI)
-	docker build --no-cache -t ${REGISTRY}website-operator-ui:${TAG} -f Dockerfile.ui .
-
 .PHONY: setup
 setup: setup-envtest
 
@@ -116,5 +104,3 @@ setup-envtest: ## Download setup-envtest locally if necessary
 .PHONY: clean
 clean:
 	rm -rf ./bin
-	rm -f ./docker/website-operator/website-operator
-	rm -f ./docker/repo-checker/repo-checker
