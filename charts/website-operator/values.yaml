@@ -1,7 +1,7 @@
 controller:
   image:
     repository: ghcr.io/zoetrope/website-operator
-    tag: 0.5.0
+    tag: app-version-placeholder
   replicas: 1
   config:
     health:
@@ -14,7 +14,7 @@ controller:
 ui:
   image:
     repository: ghcr.io/zoetrope/website-operator-ui
-    tag: 0.5.0
+    tag: app-version-placeholder
   replicas: 1
   service:
     ports:
