@@ -1,0 +1,4 @@
+owner: zoetrope
+git-repo: website-operator
+release-name-template: "{{ .Name }}-chart-{{ .Version }}"
+make-release-latest: false
