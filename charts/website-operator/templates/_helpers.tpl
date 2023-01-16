@@ -42,11 +42,25 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
+{{- define "website-operator-ui.labels" -}}
+helm.sh/chart: {{ include "website-operator.chart" . }}
+{{ include "website-operator-ui.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
 {{/*
 Selector labels
 */}}
 {{- define "website-operator.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "website-operator.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{- define "website-operator-ui.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "website-operator.name" . }}-ui
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
