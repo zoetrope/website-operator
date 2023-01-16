@@ -28,6 +28,10 @@ jobs:
           aqua_opts: ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set previous release tag for GoReleaser
+        run: |
+          export TAG=$(curl -s "https://api.github.com/repos/zoetrope/website-operator/releases/latest" | jq -r .tag_name)
+          echo "GORELEASER_PREVIOUS_TAG=${TAG}" >> $GITHUB_ENV
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
