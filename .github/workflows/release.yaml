@@ -69,6 +69,13 @@ jobs:
           sed --in-place "s/app-version-placeholder/$tag_version/g" charts/website-operator/Chart.yaml
           sed --in-place "s/0-chart-patch-version-placeholder/$new_patch_version/g" charts/website-operator/Chart.yaml
           sed --in-place "s/app-version-placeholder/$tag_version/g" charts/website-operator/values.yaml
+      - name: Create release notes
+        run: |
+          tag_version=${GITHUB_REF##*/}
+          cat <<EOF > ./chart-release-notes.md
+          Helm chart for Website Operator [$tag_version](https://github.com/zoetrope/website-operator/releases/tag/$tag_version)
+          
+          EOF
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
