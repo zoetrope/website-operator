@@ -31,7 +31,7 @@
         "^e2e\\/Makefile$"
       ],
       "matchStrings": [
-        "KUBERNETES_VERSION := (?<currentValue>.*?) # renovate: kindest\\/node\\n"
+        "KUBERNETES_VERSION := (?<currentValue>.*?) # renovate: kindest\\/node"
       ]
     },
     {
@@ -41,7 +41,7 @@
         "^cluster.yaml$"
       ],
       "matchStrings": [
-        "kubernetesVersion: (?<currentValue>.*?) # renovate: kindest\\/node\\n"
+        "kubernetesVersion: (?<currentValue>.*?) # renovate: kindest\\/node"
       ]
     }
   ]
