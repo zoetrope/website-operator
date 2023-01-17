@@ -1,5 +1,3 @@
-include common.mk
-
 SHELL := /bin/bash
 TAG ?= latest
 CRD_OPTIONS = "crd:crdVersions=v1"

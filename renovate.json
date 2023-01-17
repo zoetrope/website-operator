@@ -12,14 +12,37 @@
   ],
   "packageRules": [
     {
-      "dependencyDashboardApproval": true,
+      "automerge": false,
       "matchPackagePatterns": [
         ".*k8s.*",
-        ".*kubernetes.*"
+        ".*kubernetes.*",
+        "^kindest/node$"
       ]
     }
   ],
   "postUpdateOptions": [
     "gomodTidy"
+  ],
+  "regexManagers": [
+    {
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "kindest/node",
+      "fileMatch": [
+        "^e2e\\/Makefile$"
+      ],
+      "matchStrings": [
+        "KUBERNETES_VERSION := (?<currentValue>.*?) # renovate: kindest\\/node\\n"
+      ]
+    },
+    {
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "kindest/node",
+      "fileMatch": [
+        "^cluster.yaml$"
+      ],
+      "matchStrings": [
+        "kubernetesVersion: (?<currentValue>.*?) # renovate: kindest\\/node\\n"
+      ]
+    }
   ]
 }
