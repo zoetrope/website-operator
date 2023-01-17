@@ -1,12 +1,12 @@
-include ../common.mk
-
+KUBERNETES_VERSION := v1.25.3 # renovate kindest/node
+REGISTRY := ghcr.io/zoetrope/
 KIND_CLUSTER_NAME=website-e2e
 
 GO_FILES := $(shell find .. -path ../vendor -prune -o -path ../e2e -prune -o -name '*.go' -print)
 
 launch-kind:
 	if [ ! "$(shell kind get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
-		kind create cluster --name=$(KIND_CLUSTER_NAME) --config kind-config.yaml --image kindest/node:v$(KUBERNETES_VERSION) --wait 180s; \
+		kind create cluster --name=$(KIND_CLUSTER_NAME) --config kind-config.yaml --image kindest/node:$(KUBERNETES_VERSION) --wait 180s; \
 	fi
 
 shutdown-kind:

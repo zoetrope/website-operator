@@ -7,5 +7,5 @@ apiVersion: ctlptl.dev/v1alpha1
 kind: Cluster
 name: kind-website-operator-dev
 product: kind
-kubernetesVersion: v1.25.0
+kubernetesVersion: v1.25.0 # renovate kindest/node
 registry: ctlptl-registry
