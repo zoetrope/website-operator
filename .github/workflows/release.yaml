@@ -72,7 +72,7 @@ jobs:
       - name: Create release notes
         run: |
           tag_version=${GITHUB_REF##*/}
-          cat <<EOF > ./chart-release-notes.md
+          cat <<EOF > ./charts/website-operator/RELEASE.md
           Helm chart for Website Operator [$tag_version](https://github.com/zoetrope/website-operator/releases/tag/$tag_version)
           
           EOF

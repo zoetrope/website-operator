@@ -2,4 +2,4 @@ owner: zoetrope
 git-repo: website-operator
 release-name-template: "{{ .Name }}-chart-{{ .Version }}"
 make-release-latest: false
-release-notes-file: chart-release-notes.md
+release-notes-file: RELEASE.md
