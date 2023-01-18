@@ -28,6 +28,12 @@ jobs:
   e2e:
     name: End-to-end Test
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        k8s-version:
+          - "v1.23.13" # renovate: kindest/node
+          - "v1.24.7" # renovate: kindest/node
+          - "v1.25.3" # renovate: kindest/node
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -44,7 +50,7 @@ jobs:
           ${{ secrets.DEPLOY_KEY }}
           EOF
       - run: chmod 0600 ./e2e/manifests/website/.ssh/id_rsa
-      - run: make test
+      - run: make test KUBERNETES_VERSION=${{ matrix.k8s-version }}
         id: run_e2e_test
         working-directory: e2e
       - if: failure() && steps.run_e2e_test.outcome == 'failure'
