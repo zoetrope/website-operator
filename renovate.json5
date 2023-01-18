@@ -12,21 +12,21 @@
   ],
   "packageRules": [
     {
+      "description": "Separate minor and patch updates for Kubernetes packages",
       "matchDatasources": [
         "go"
       ],
-      "description": "Separate minor and patch updates for Kubernetes packages",
       "matchPackagePatterns": [
         "^k8s\\.io\\/.*"
       ],
       "separateMinorPatch": true
     },
     {
+      "dependencyDashboardApproval": true,
+      "description": "Require approval for Kubernetes packages major and minor updates",
       "matchDatasources": [
         "go"
       ],
-      "dependencyDashboardApproval": true,
-      "description": "Require approval for Kubernetes packages major and minor updates",
       "matchPackagePatterns": [
         "^k8s\\.io\\/.*"
       ],
@@ -36,11 +36,11 @@
       ]
     },
     {
+      "description": "Disable major updates for k8s.io/client-go",
+      "enabled": false,
       "matchDatasources": [
         "go"
       ],
-      "description": "Disable major updates for k8s.io/client-go",
-      "enabled": false,
       "matchPackageNames": [
         "k8s.io/client-go"
       ],
@@ -49,8 +49,8 @@
       ]
     },
     {
-      "automerge": false,
-      "description": "Disable automerge for sigs.k8s.io packages",
+      "dependencyDashboardApproval": true,
+      "description": "Require approval for sigs.k8s.io packages",
       "matchDatasources": [
         "go"
       ],
