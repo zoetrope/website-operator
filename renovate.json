@@ -12,13 +12,24 @@
   ],
   "packageRules": [
     {
+      "automerge": true,
+      "description": "Enable patch update automerge for Kubernetes packages",
+      "matchPackagePatterns": [
+        "^kubernetes-sigs\\/controller-tools",
+        "^kubernetes\\/kubectl",
+        "^k8s\\.io\\/.*",
+        "^sig\\.k8s\\.io\\/.*"
+      ],
+      "separateMinorPatch": true
+    },
+    {
       "automerge": false,
       "description": "Disable minor update automerge for Kubernetes packages",
       "matchPackagePatterns": [
-        "kubernetes-sigs/controller-tools",
-        "kubernetes/kubectl",
-        "^k8s/.*",
-        "^sig.k8s/.*"
+        "^kubernetes-sigs\\/controller-tools",
+        "^kubernetes\\/kubectl",
+        "^k8s\\.io\\/.*",
+        "^sig\\.k8s\\.io\\/.*"
       ],
       "matchUpdateTypes": [
         "major",
