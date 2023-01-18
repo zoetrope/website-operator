@@ -22,6 +22,7 @@
       "separateMinorPatch": true
     },
     {
+      "automerge": false,
       "dependencyDashboardApproval": true,
       "description": "Require approval for Kubernetes packages major and minor updates",
       "matchDatasources": [
@@ -49,6 +50,7 @@
       ]
     },
     {
+      "automerge": false,
       "dependencyDashboardApproval": true,
       "description": "Require approval for sigs.k8s.io packages",
       "matchDatasources": [
