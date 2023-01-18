@@ -23,8 +23,7 @@
       "matchUpdateTypes": [
         "major",
         "minor"
-      ],
-      "separateMinorPatch": true
+      ]
     },
     {
       "description": "Disable major update for k8s.io/client-go",
