@@ -13,18 +13,62 @@
   "packageRules": [
     {
       "automerge": false,
+      "description": "Disable minor update automerge for Kubernetes packages",
       "matchPackagePatterns": [
-        ".*k8s.*",
-        ".*kubernetes.*",
-        "^kindest/node$"
+        "kubernetes-sigs/controller-tools",
+        "kubernetes/kubectl",
+        "^k8s/.*",
+        "^sig.k8s/.*"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
       ],
       "separateMinorPatch": true
+    },
+    {
+      "description": "Disable major update for k8s.io/client-go",
+      "enabled": false,
+      "matchPackageNames": [
+        "k8s.io/client-go"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ]
+    },
+    {
+      "description": "Enable patch update for Kubernetes",
+      "matchPackageNames": [
+        "kindest/node"
+      ],
+      "separateMinorPatch": true
+    },
+    {
+      "description": "Disable automatic major/minor update for Kubernetes",
+      "enabled": false,
+      "matchPackageNames": [
+        "kindest/node"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ]
     }
   ],
   "postUpdateOptions": [
     "gomodTidy"
   ],
   "regexManagers": [
+    {
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "kindest/node",
+      "fileMatch": [
+        "^\\.github\\/workflows\\/.+\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "- (?<currentValue>.+?) # renovate: kindest\\/node"
+      ]
+    },
     {
       "datasourceTemplate": "docker",
       "depNameTemplate": "kindest/node",
