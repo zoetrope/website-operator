@@ -17,8 +17,7 @@
       ],
       "description": "Separate minor and patch updates for Kubernetes packages",
       "matchPackagePatterns": [
-        "^k8s\\.io\\/.*",
-        "^sig\\.k8s\\.io\\/.*"
+        "^k8s\\.io\\/.*"
       ],
       "separateMinorPatch": true
     },
@@ -29,8 +28,7 @@
       "dependencyDashboardApproval": true,
       "description": "Require approval for Kubernetes packages major and minor updates",
       "matchPackagePatterns": [
-        "^k8s\\.io\\/.*",
-        "^sig\\.k8s\\.io\\/.*"
+        "^k8s\\.io\\/.*"
       ],
       "matchUpdateTypes": [
         "major",
@@ -48,6 +46,16 @@
       ],
       "matchUpdateTypes": [
         "major"
+      ]
+    },
+    {
+      "automerge": false,
+      "description": "Disable automerge for sigs.k8s.io packages",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackagePatterns": [
+        "^sigs\\.k8s\\.io\\/.*"
       ]
     },
     {
