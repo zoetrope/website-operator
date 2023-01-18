@@ -12,22 +12,23 @@
   ],
   "packageRules": [
     {
-      "automerge": true,
-      "description": "Enable patch update automerge for Kubernetes packages",
+      "matchDatasources": [
+        "go"
+      ],
+      "description": "Separate minor and patch updates for Kubernetes packages",
       "matchPackagePatterns": [
-        "^kubernetes-sigs\\/controller-tools",
-        "^kubernetes\\/kubectl",
         "^k8s\\.io\\/.*",
         "^sig\\.k8s\\.io\\/.*"
       ],
       "separateMinorPatch": true
     },
     {
-      "automerge": false,
-      "description": "Disable minor update automerge for Kubernetes packages",
+      "matchDatasources": [
+        "go"
+      ],
+      "dependencyDashboardApproval": true,
+      "description": "Require approval for Kubernetes packages major and minor updates",
       "matchPackagePatterns": [
-        "^kubernetes-sigs\\/controller-tools",
-        "^kubernetes\\/kubectl",
         "^k8s\\.io\\/.*",
         "^sig\\.k8s\\.io\\/.*"
       ],
@@ -37,7 +38,10 @@
       ]
     },
     {
-      "description": "Disable major update for k8s.io/client-go",
+      "matchDatasources": [
+        "go"
+      ],
+      "description": "Disable major updates for k8s.io/client-go",
       "enabled": false,
       "matchPackageNames": [
         "k8s.io/client-go"
@@ -47,14 +51,39 @@
       ]
     },
     {
-      "description": "Enable patch update for Kubernetes",
+      "description": "Separate minor and patch updates for kubectl",
+      "matchPackageNames": [
+        "kubernetes/kubectl"
+      ],
+      "separateMinorPatch": true
+    },
+    {
+      "description": "Disable major and minor update for kubectl",
+      "enabled": false,
+      "matchPackageNames": [
+        "kubernetes/kubectl"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ]
+    },
+    {
+      "automerge": false,
+      "description": "Disable automerge for controller-tools",
+      "matchPackageNames": [
+        "kubernetes-sigs/controller-tools"
+      ]
+    },
+    {
+      "description": "Separate minor and patch update for Kubernetes",
       "matchPackageNames": [
         "kindest/node"
       ],
       "separateMinorPatch": true
     },
     {
-      "description": "Disable automatic major/minor update for Kubernetes",
+      "description": "Disable major and minor update for Kubernetes",
       "enabled": false,
       "matchPackageNames": [
         "kindest/node"
