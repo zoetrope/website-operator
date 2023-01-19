@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - name: ui
+          image: ghcr.io/zoetrope/website-operator-ui:dev-amd64

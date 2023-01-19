@@ -4,6 +4,9 @@ namespace: website-operator-system
 resources:
   - ../../../config/default
   - rbac.yaml
+patchesStrategicMerge:
+  - manager.yaml
+  - ui.yaml
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:

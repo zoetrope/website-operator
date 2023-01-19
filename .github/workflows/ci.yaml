@@ -57,6 +57,12 @@ jobs:
         run: |
           kubectl get pod
           kubectl describe pod
+  check-e2e-test:
+    name: All e2e tests passed
+    runs-on: ubuntu-latest
+    needs: e2e
+    steps:
+      - run: echo ok
   check-goreleaser-config:
     name: Check goreleaser.yml
     runs-on: ubuntu-20.04

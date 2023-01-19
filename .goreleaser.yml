@@ -1,5 +1,7 @@
 project_name: website-operator
 dist: bin/
+release:
+  skip_upload: true
 builds:
   - id: website-operator
     env:
@@ -10,6 +12,7 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
     ldflags:
       - -X github.com/zoetrope/website-operator.Version={{.Version}}
   - id: website-operator-ui
@@ -21,6 +24,7 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
     ldflags:
       - -X github.com/zoetrope/website-operator.Version={{.Version}}
   - id: repo-checker
@@ -32,6 +36,7 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
     ldflags:
       - -X github.com/zoetrope/website-operator.Version={{.Version}}
 before:
@@ -39,7 +44,7 @@ before:
     - make frontend
 dockers:
   - image_templates:
-      - "ghcr.io/zoetrope/website-operator:{{ .Version }}"
+      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-amd64"
     use: buildx
     dockerfile: ./Dockerfile
     ids:
@@ -52,7 +57,20 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
   - image_templates:
-      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}"
+      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-arm64"
+    use: buildx
+    dockerfile: ./Dockerfile
+    ids:
+      - website-operator
+    extra_files:
+      - LICENSE
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+  - image_templates:
+      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-amd64"
     use: buildx
     dockerfile: ./Dockerfile.ui
     ids:
@@ -66,7 +84,21 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
   - image_templates:
-    - "ghcr.io/zoetrope/repo-checker:{{ .Version }}"
+      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-arm64"
+    use: buildx
+    dockerfile: ./Dockerfile.ui
+    ids:
+      - website-operator-ui
+    extra_files:
+      - LICENSE
+      - ui/frontend/dist
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+  - image_templates:
+    - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-amd64"
     use: buildx
     dockerfile: ./Dockerfile.repo-checker
     ids:
@@ -78,16 +110,44 @@ dockers:
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
+  - image_templates:
+      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-arm64"
+    use: buildx
+    dockerfile: ./Dockerfile.repo-checker
+    ids:
+      - repo-checker
+    extra_files:
+      - LICENSE
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
 docker_manifests:
   - name_template: "ghcr.io/zoetrope/website-operator:{{ .Version }}"
     image_templates:
-      - "ghcr.io/zoetrope/website-operator:{{ .Version }}"
+      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-amd64"
+      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/zoetrope/website-operator:{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-amd64"
+      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-arm64"
   - name_template: "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}"
     image_templates:
-      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}"
+      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-amd64"
+      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/zoetrope/website-operator-ui:{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-amd64"
+      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-arm64"
   - name_template: "ghcr.io/zoetrope/repo-checker:{{ .Version }}"
     image_templates:
-      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}"
+      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-amd64"
+      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/zoetrope/repo-checker:{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-amd64"
+      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-arm64"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
