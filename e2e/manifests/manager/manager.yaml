@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - name: manager
+          image: ghcr.io/zoetrope/website-operator:dev-amd64
+          args:
+            - --repochecker-container-image=ghcr.io/zoetrope/repo-checker:dev-amd64

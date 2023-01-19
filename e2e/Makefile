@@ -28,15 +28,15 @@ test: launch-kind load-images setup-cluster
 .PHONY: load-images
 load-images:
 	cd ../ && goreleaser release --rm-dist --snapshot --skip-publish
-	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)website-operator:dev); \
+	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)website-operator:dev-amd64); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
-		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator:dev; \
+		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator:dev-amd64; \
 	fi
-	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)repo-checker:dev); \
+	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)repo-checker:dev-amd64); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
-		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)repo-checker:dev; \
+		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)repo-checker:dev-amd64; \
 	fi
-	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)website-operator-ui:dev); \
+	ID=$$(docker image inspect --format='{{.ID}}' $(REGISTRY)website-operator-ui:dev-amd64); \
 	if [ ! "$$(docker exec -it $(KIND_CLUSTER_NAME)-control-plane ctr --namespace=k8s.io images list | grep $$ID)" ]; then \
-		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator-ui:dev; \
+		kind load docker-image --name=$(KIND_CLUSTER_NAME) $(REGISTRY)website-operator-ui:dev-amd64; \
 	fi
