@@ -7,6 +7,7 @@ CMD ["/website-operator"]
 '''
 
 REPOCHECKER_DOCKERFILE = '''FROM golang:alpine
+RUN apk update && apk add git
 WORKDIR /
 COPY ./bin/repo-checker /
 CMD ["/repo-checker"]

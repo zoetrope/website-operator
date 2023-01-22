@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/zoetrope/website-operator"
 )
 
@@ -41,11 +40,11 @@ func Execute() {
 }
 
 func init() {
-	repochecker := viper.GetString("REPOCHECKER_CONTAINER_IMAGE")
+	repochecker := os.Getenv("REPOCHECKER_CONTAINER_IMAGE")
 	if repochecker == "" {
 		repochecker = website.DefaultRepoCheckerContainerImage
 	}
-	nginx := viper.GetString("NGINX_CONTAINER_IMAGE")
+	nginx := os.Getenv("NGINX_CONTAINER_IMAGE")
 	if nginx == "" {
 		nginx = website.DefaultNginxContainerImage
 	}
