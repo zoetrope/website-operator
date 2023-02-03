@@ -1,0 +1,24 @@
+apiVersion: website.zoetrope.github.io/v1beta1
+kind: WebSite
+metadata:
+  name: docusaurus-sample
+  namespace: default
+spec:
+  buildImage: ghcr.io/zoetrope/node:18.12.1
+  buildScript:
+    rawData: |
+        #!/bin/bash -ex
+        cd $HOME
+        rm -rf $REPO_NAME
+        git clone $REPO_URL
+        cd $REPO_NAME
+        git checkout $REVISION
+    
+        npm install
+        npm run build
+    
+        rm -rf $OUTPUT/*
+        cp -r build/* $OUTPUT/
+  repoURL: https://github.com/zoetrope/docusaurus-sample.git
+  branch: main
+  publicURL: http://localhost:9191
