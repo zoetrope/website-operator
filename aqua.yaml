@@ -14,5 +14,5 @@ packages:
   - name: kubernetes-sigs/kustomize@kustomize/v4.5.7
   - name: kubernetes/kubectl@v1.25.7
   - name: mikefarah/yq@v4.30.8
-  - name: tilt-dev/ctlptl@v0.8.15
+  - name: tilt-dev/ctlptl@v0.8.17
   - name: tilt-dev/tilt@v0.31.1
