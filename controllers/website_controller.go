@@ -952,7 +952,7 @@ func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	logger := mgr.GetLogger().WithName("ConfigMap Handler")
-	cmHandler := func(o client.Object) []reconcile.Request {
+	cmHandler := func(ctx context.Context, o client.Object) []reconcile.Request {
 		wsl := &websitev1beta1.WebSiteList{}
 		err := r.client.List(ctx, wsl)
 		if err != nil {
@@ -991,7 +991,7 @@ func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.ConfigMap{}).
 		Owns(&batchv1.Job{}).
-		Watches(&src, &handler.EnqueueRequestForObject{}).
-		Watches(&source.Kind{Type: &corev1.ConfigMap{}}, handler.EnqueueRequestsFromMapFunc(cmHandler)).
+		WatchesRawSource(&src, &handler.EnqueueRequestForObject{}).
+		Watches(&corev1.ConfigMap{}, handler.EnqueueRequestsFromMapFunc(cmHandler)).
 		Complete(r)
 }
