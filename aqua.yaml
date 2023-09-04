@@ -3,7 +3,7 @@
 # https://aquaproj.github.io/
 registries:
   - type: standard
-    ref: v3.149.1 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.44.0 # renovate: depName=aquaproj/aqua-registry
 
 packages:
   - name: arttor/helmify@v0.3.35
@@ -11,7 +11,7 @@ packages:
   - name: kubernetes-sigs/controller-tools/controller-gen@v0.11.4
   - name: kubernetes-sigs/kind@v0.17.0
   - name: kubernetes-sigs/kubebuilder@v3.8.0
-  - name: kubernetes-sigs/kustomize@kustomize/v4.5.7
+  - name: kubernetes-sigs/kustomize@kustomize/v5.1.1
   - name: kubernetes/kubectl@v1.25.13
   - name: mikefarah/yq@v4.30.8
   - name: tilt-dev/ctlptl@v0.8.22
