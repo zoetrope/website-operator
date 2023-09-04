@@ -10,12 +10,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4
         with:
           go-version-file: go.mod
       - uses: aquaproj/aqua-installer@v2.0.2
         with:
-          aqua_version: v1.38.0
+          aqua_version: v2.10.1
           aqua_opts: ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,12 +36,12 @@ jobs:
           - v1.25.11 # renovate: kindest/node
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4
         with:
           go-version-file: go.mod
       - uses: aquaproj/aqua-installer@v2.0.2
         with:
-          aqua_version: v1.38.0
+          aqua_version: v2.10.1
           aqua_opts: ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4
         with:
           go-version-file: go.mod
       - uses: goreleaser/goreleaser-action@v4
@@ -80,12 +80,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4
         with:
           go-version-file: go.mod
       - uses: aquaproj/aqua-installer@v2.0.2
         with:
-          aqua_version: v1.38.0
+          aqua_version: v2.10.1
           aqua_opts: ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,12 +101,12 @@ jobs:
           fetch-depth: 0
       - uses: docker/setup-qemu-action@v2
       - uses: docker/setup-buildx-action@v2
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4
         with:
           go-version-file: go.mod
       - uses: aquaproj/aqua-installer@v2.0.2
         with:
-          aqua_version: v1.38.0
+          aqua_version: v2.10.1
           aqua_opts: ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
