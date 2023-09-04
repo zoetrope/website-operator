@@ -497,37 +497,13 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 	newTemplate.Labels[InstanceKey] = webSite.Name
 	newTemplate.Annotations[AnnChecksumConfig] = hash
 
+	newTemplate.Spec.Volumes = append(newTemplate.Spec.Volumes, getVolumeOrEmptyDir(webSite, "data"))
+	newTemplate.Spec.Volumes = append(newTemplate.Spec.Volumes, getVolumeOrEmptyDir(webSite, "log"))
+	newTemplate.Spec.Volumes = append(newTemplate.Spec.Volumes, getVolumeOrEmptyDir(webSite, "cache"))
+	newTemplate.Spec.Volumes = append(newTemplate.Spec.Volumes, getVolumeOrEmptyDir(webSite, "tmp"))
+	newTemplate.Spec.Volumes = append(newTemplate.Spec.Volumes, getVolumeOrEmptyDir(webSite, "home"))
+
 	newTemplate.Spec.Volumes = append(newTemplate.Spec.Volumes,
-		corev1.Volume{
-			Name: "data",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		corev1.Volume{
-			Name: "log",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		corev1.Volume{
-			Name: "cache",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		corev1.Volume{
-			Name: "tmp",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		corev1.Volume{
-			Name: "home",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
 		corev1.Volume{
 			Name: BuildScriptName + "-script",
 			VolumeSource: corev1.VolumeSource{
@@ -808,25 +784,11 @@ func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSi
 	template.Annotations = make(map[string]string)
 	template.Annotations[AnnChecksumConfig] = hash
 	template.Spec.RestartPolicy = corev1.RestartPolicyNever
+
+	template.Spec.Volumes = append(template.Spec.Volumes, getVolumeOrEmptyDir(webSite, "log"))
+	template.Spec.Volumes = append(template.Spec.Volumes, getVolumeOrEmptyDir(webSite, "cache"))
+	template.Spec.Volumes = append(template.Spec.Volumes, getVolumeOrEmptyDir(webSite, "tmp"))
 	template.Spec.Volumes = append(template.Spec.Volumes,
-		corev1.Volume{
-			Name: "log",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		corev1.Volume{
-			Name: "cache",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		corev1.Volume{
-			Name: "tmp",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
 		corev1.Volume{
 			Name: AfterBuildScriptName + "-script",
 			VolumeSource: corev1.VolumeSource{
@@ -955,6 +917,20 @@ func setStandardLabels(app string, om *metav1.ObjectMeta) {
 func selectReadyWebSite(obj client.Object) []string {
 	site := obj.(*websitev1beta1.WebSite)
 	return []string{string(site.Status.Ready)}
+}
+
+func getVolumeOrEmptyDir(webSite *websitev1beta1.WebSite, name string) corev1.Volume {
+	for _, v := range webSite.Spec.VolumeTemplates {
+		if v.Name == name {
+			return v
+		}
+	}
+	return corev1.Volume{
+		Name: name,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -19,3 +19,7 @@ spec:
     - configMap:
         name: httpproxy
         key: httpproxy.tmpl
+  volumeTemplates:
+    - name: home
+      persistentVolumeClaim:
+        claimName: website-home

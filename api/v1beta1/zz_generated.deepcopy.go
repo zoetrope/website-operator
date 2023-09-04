@@ -216,6 +216,13 @@ func (in *WebSiteSpec) DeepCopyInto(out *WebSiteSpec) {
 		*out = new(PodTemplate)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.VolumeTemplates != nil {
+		in, out := &in.VolumeTemplates, &out.VolumeTemplates
+		*out = make([]v1.Volume, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.ServiceTemplate != nil {
 		in, out := &in.ServiceTemplate, &out.ServiceTemplate
 		*out = new(ServiceTemplate)

@@ -55,6 +55,10 @@ type WebSiteSpec struct {
 	// +optional
 	PodTemplate *PodTemplate `json:"podTemplate,omitempty"`
 
+	// VolumeTemplates are `Volume` templates for nginx container.
+	// +optional
+	VolumeTemplates []corev1.Volume `json:"volumeTemplates,omitempty"`
+
 	// ServiceTemplate is a `Service` template for nginx.
 	// +optional
 	ServiceTemplate *ServiceTemplate `json:"serviceTemplate,omitempty"`
