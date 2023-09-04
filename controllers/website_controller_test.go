@@ -397,7 +397,7 @@ spec:
 			}).Should(Succeed())
 
 			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
-			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(4))
 			Expect(job.Spec.Template.Annotations).Should(HaveLen(1))
 			Expect(job.Spec.Template.Annotations).Should(HaveKey(AnnChecksumConfig))
 			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
@@ -418,7 +418,7 @@ spec:
 			}).Should(Succeed())
 
 			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
-			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(4))
 			Expect(job.Spec.Template.Annotations).Should(HaveLen(1))
 			Expect(job.Spec.Template.Annotations).Should(HaveKey(AnnChecksumConfig))
 			Expect(job.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
@@ -439,7 +439,7 @@ spec:
 			}).Should(Succeed())
 
 			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
-			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(4))
 			Expect(job.Spec.Template.Annotations).Should(HaveLen(1))
 			Expect(job.Spec.Template.Annotations).Should(HaveKey(AnnChecksumConfig))
 			Expect(job.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
@@ -461,7 +461,7 @@ spec:
 			}).Should(Succeed())
 
 			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
-			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(4))
 			Expect(job.Spec.Template.Annotations).Should(HaveLen(1))
 			Expect(job.Spec.Template.Annotations).Should(HaveKey(AnnChecksumConfig))
 			Expect(job.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
@@ -483,7 +483,7 @@ spec:
 			}).Should(Succeed())
 
 			Expect(job.Spec.Template.Spec.Containers).Should(HaveLen(1))
-			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(4))
 			Expect(job.Spec.Template.Annotations).Should(HaveLen(1))
 			Expect(job.Spec.Template.Annotations).Should(HaveKey(AnnChecksumConfig))
 			Expect(job.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
@@ -503,7 +503,7 @@ spec:
 			}, 60).Should(BeTrue())
 
 			Expect(newJob.Spec.Template.Spec.Containers).Should(HaveLen(1))
-			Expect(job.Spec.Template.Labels).Should(HaveLen(2))
+			Expect(job.Spec.Template.Labels).Should(HaveLen(4))
 			Expect(newJob.Spec.Template.Annotations).Should(HaveLen(1))
 			Expect(newJob.Spec.Template.Annotations).Should(HaveKey(AnnChecksumConfig))
 			Expect(newJob.Spec.Template.Spec.Containers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev2")})))
