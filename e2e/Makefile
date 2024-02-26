@@ -1,4 +1,4 @@
-KUBERNETES_VERSION := v1.27.10 # renovate: kindest/node
+KUBERNETES_VERSION := v1.27.11 # renovate: kindest/node
 REGISTRY := ghcr.io/zoetrope/
 KIND_CLUSTER_NAME=website-e2e
 
