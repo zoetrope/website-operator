@@ -15,4 +15,4 @@ packages:
   - name: kubernetes/kubectl@v1.27.12
   - name: mikefarah/yq@v4.35.2
   - name: tilt-dev/ctlptl@v0.8.28
-  - name: tilt-dev/tilt@v0.33.11
+  - name: tilt-dev/tilt@v0.33.17
