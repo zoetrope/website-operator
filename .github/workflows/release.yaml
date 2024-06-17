@@ -33,7 +33,7 @@ jobs:
           export TAG=$(curl -s "https://api.github.com/repos/zoetrope/website-operator/releases/latest" | jq -r .tag_name)
           echo "GORELEASER_PREVIOUS_TAG=${TAG}" >> $GITHUB_ENV
       - name: GoReleaser
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: release --clean
