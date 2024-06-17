@@ -2,7 +2,7 @@
   "automerge": true,
   "extends": [
     "config:base",
-    "github>aquaproj/aqua-renovate-config#1.13.0",
+    "github>aquaproj/aqua-renovate-config#2.3.1",
     ":semanticCommitTypeAll(chore)",
     ":timezone(Asia/Tokyo)",
     "schedule:weekly"
