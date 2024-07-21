@@ -10,7 +10,7 @@ packages:
   - name: kubernetes-sigs/controller-tools/controller-gen@v0.15.0
   - name: kubernetes-sigs/kind@v0.23.0
   - name: kubernetes-sigs/kubebuilder@v4.1.0
-  - name: kubernetes-sigs/kustomize@kustomize/v5.4.2
+  - name: kubernetes-sigs/kustomize@kustomize/v5.4.3
   - name: kubernetes/kubectl@v1.29.6
   - name: mikefarah/yq@v4.44.2
   - name: tilt-dev/ctlptl@v0.8.29
