@@ -73,7 +73,7 @@ jobs:
           go-version-file: go.mod
       - uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: v2.3.2
           args: check -f .goreleaser.yml
   tilt:
     name: Run tilt ci
@@ -116,5 +116,5 @@ jobs:
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: v2.3.2
           args: --snapshot --skip=publish --clean

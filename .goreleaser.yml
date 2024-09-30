@@ -1,3 +1,4 @@
+version: 2
 project_name: website-operator
 dist: bin/
 release:
@@ -151,6 +152,6 @@ docker_manifests:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "dev"
+  version_template: "dev"
 changelog:
   use: github-native
