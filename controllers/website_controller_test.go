@@ -15,8 +15,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/config"
 )
 
 var _ = Describe("WebSite controller", func() {
@@ -45,6 +47,9 @@ var _ = Describe("WebSite controller", func() {
 
 		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 			Scheme: scheme,
+			Controller: config.Controller{
+				SkipNameValidation: ptr.To(true),
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-
 	"github.com/zoetrope/website-operator"
 	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -14,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-func newRevisionWatcher(client client.Client, log logr.Logger, ch chan<- event.GenericEvent, interval time.Duration, revCli RevisionClient) manager.Runnable {
+func newRevisionWatcher(client client.Client, log logr.Logger, ch chan<- event.TypedGenericEvent[*websitev1beta1.WebSite], interval time.Duration, revCli RevisionClient) manager.Runnable {
 	return &revisionWatcher{
 		client:         client,
 		log:            log,
@@ -27,7 +26,7 @@ func newRevisionWatcher(client client.Client, log logr.Logger, ch chan<- event.G
 type revisionWatcher struct {
 	client         client.Client
 	log            logr.Logger
-	channel        chan<- event.GenericEvent
+	channel        chan<- event.TypedGenericEvent[*websitev1beta1.WebSite]
 	interval       time.Duration
 	revisionClient RevisionClient
 }
@@ -66,9 +65,10 @@ func (w revisionWatcher) revisionChanged(ctx context.Context) error {
 			continue
 		}
 		w.log.Info("revisionChanged", "currentRevision", site.Status.Revision, "latestRevision", latestRev)
-		w.channel <- event.GenericEvent{
+		ev := event.TypedGenericEvent[*websitev1beta1.WebSite]{
 			Object: site.DeepCopy(),
 		}
+		w.channel <- ev
 	}
 	return nil
 }
