@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.15.0
+    controller-gen.kubebuilder.io/version: v0.16.3
   name: websites.website.zoetrope.github.io
 spec:
   group: website.zoetrope.github.io
@@ -159,10 +159,13 @@ spec:
                       referenced object inside the same namespace.
                     properties:
                       name:
+                        default: ""
                         description: |-
                           Name of the referent.
+                          This field is effectively required, but due to backwards compatibility is
+                          allowed to be empty. Instances of this type with an empty value here are
+                          almost certainly wrong.
                           More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?
                         type: string
                     type: object
                     x-kubernetes-map-type: atomic
@@ -231,7 +234,6 @@ spec:
                               Tip: Ensure that the filesystem type is supported by the host operating system.
                               Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
                               More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
-                              TODO: how do we prevent errors in the filesystem from compromising the machine
                             type: string
                           partition:
                             description: |-
@@ -267,6 +269,7 @@ spec:
                             description: diskURI is the URI of data disk in the blob storage
                             type: string
                           fsType:
+                            default: ext4
                             description: |-
                               fsType is Filesystem type to mount.
                               Must be a filesystem type supported by the host operating system.
@@ -276,6 +279,7 @@ spec:
                             description: 'kind expected values are Shared: multiple blob disks per storage account  Dedicated: single blob disk per storage account  Managed: azure managed data disk (only in managed availability set). defaults to shared'
                             type: string
                           readOnly:
+                            default: false
                             description: |-
                               readOnly Defaults to false (read/write). ReadOnly here will force
                               the ReadOnly setting in VolumeMounts.
@@ -312,6 +316,7 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                           path:
                             description: 'path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /'
                             type: string
@@ -332,10 +337,13 @@ spec:
                               More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
                             properties:
                               name:
+                                default: ""
                                 description: |-
                                   Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
                                   More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind, uid?
                                 type: string
                             type: object
                             x-kubernetes-map-type: atomic
@@ -371,10 +379,13 @@ spec:
                               to OpenStack.
                             properties:
                               name:
+                                default: ""
                                 description: |-
                                   Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
                                   More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind, uid?
                                 type: string
                             type: object
                             x-kubernetes-map-type: atomic
@@ -437,11 +448,15 @@ spec:
                                 - path
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           name:
+                            default: ""
                             description: |-
                               Name of the referent.
+                              This field is effectively required, but due to backwards compatibility is
+                              allowed to be empty. Instances of this type with an empty value here are
+                              almost certainly wrong.
                               More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                              TODO: Add other useful fields. apiVersion, kind, uid?
                             type: string
                           optional:
                             description: optional specify whether the ConfigMap or its keys must be defined
@@ -471,10 +486,13 @@ spec:
                               secret object contains more than one secret, all secret references are passed.
                             properties:
                               name:
+                                default: ""
                                 description: |-
                                   Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
                                   More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind, uid?
                                 type: string
                             type: object
                             x-kubernetes-map-type: atomic
@@ -514,7 +532,7 @@ spec:
                               description: DownwardAPIVolumeFile represents information to create the file containing the pod field
                               properties:
                                 fieldRef:
-                                  description: 'Required: Selects a field of the pod: only annotations, labels, name and namespace are supported.'
+                                  description: 'Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are supported.'
                                   properties:
                                     apiVersion:
                                       description: Version of the schema the FieldPath is written in terms of, defaults to "v1".
@@ -565,6 +583,7 @@ spec:
                                 - path
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                         type: object
                       emptyDir:
                         description: |-
@@ -598,7 +617,6 @@ spec:
                           The volume's lifecycle is tied to the pod that defines it - it will be created before the pod starts,
                           and deleted when the pod is removed.
 
-
                           Use this if:
                           a) the volume is only needed while the pod runs,
                           b) features of normal volumes like restoring from snapshot or capacity
@@ -609,16 +627,13 @@ spec:
                              information on the connection between this volume type
                              and PersistentVolumeClaim).
 
-
                           Use PersistentVolumeClaim or one of the vendor-specific
                           APIs for volumes that persist for longer than the lifecycle
                           of an individual pod.
 
-
                           Use CSI for light-weight local ephemeral volumes if the CSI driver is meant to
                           be used that way - see the documentation of the driver for
                           more information.
-
 
                           A pod can use both types of ephemeral volumes and
                           persistent volumes at the same time.
@@ -633,7 +648,6 @@ spec:
                               entry. Pod validation will reject the pod if the concatenated name
                               is not valid for a PVC (for example, too long).
 
-
                               An existing PVC with that name that is not owned by the pod
                               will *not* be used for the pod to avoid using an unrelated
                               volume by mistake. Starting the pod is then blocked until
@@ -643,10 +657,8 @@ spec:
                               this should not be necessary, but it may be useful when
                               manually reconstructing a broken cluster.
 
-
                               This field is read-only and no changes will be made by Kubernetes
                               to the PVC after it has been created.
-
 
                               Required, must not be nil.
                             properties:
@@ -670,6 +682,7 @@ spec:
                                     items:
                                       type: string
                                     type: array
+                                    x-kubernetes-list-type: atomic
                                   dataSource:
                                     description: |-
                                       dataSource field can be used to specify either:
@@ -806,11 +819,13 @@ spec:
                                               items:
                                                 type: string
                                               type: array
+                                              x-kubernetes-list-type: atomic
                                           required:
                                             - key
                                             - operator
                                           type: object
                                         type: array
+                                        x-kubernetes-list-type: atomic
                                       matchLabels:
                                         additionalProperties:
                                           type: string
@@ -838,8 +853,8 @@ spec:
                                       If the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be
                                       set to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource
                                       exists.
-                                      More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#volumeattributesclass
-                                      (Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.
+                                      More info: https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/
+                                      (Beta) Using this field requires the VolumeAttributesClass feature gate to be enabled (off by default).
                                     type: string
                                   volumeMode:
                                     description: |-
@@ -862,7 +877,6 @@ spec:
                               fsType is the filesystem type to mount.
                               Must be a filesystem type supported by the host operating system.
                               Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
-                              TODO: how do we prevent errors in the filesystem from compromising the machine
                             type: string
                           lun:
                             description: 'lun is Optional: FC target lun number'
@@ -878,6 +892,7 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                           wwids:
                             description: |-
                               wwids Optional: FC volume world wide identifiers (wwids)
@@ -885,6 +900,7 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                         type: object
                       flexVolume:
                         description: |-
@@ -919,10 +935,13 @@ spec:
                               scripts.
                             properties:
                               name:
+                                default: ""
                                 description: |-
                                   Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
                                   More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind, uid?
                                 type: string
                             type: object
                             x-kubernetes-map-type: atomic
@@ -953,7 +972,6 @@ spec:
                               Tip: Ensure that the filesystem type is supported by the host operating system.
                               Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
                               More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
-                              TODO: how do we prevent errors in the filesystem from compromising the machine
                             type: string
                           partition:
                             description: |-
@@ -1033,9 +1051,6 @@ spec:
                           used for system agents or other privileged things that are allowed
                           to see the host machine. Most containers will NOT need this.
                           More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
-                          ---
-                          TODO(jonesdl) We need to restrict who can use host directory mounts and who can/can not
-                          mount host directories as read/write.
                         properties:
                           path:
                             description: |-
@@ -1051,6 +1066,41 @@ spec:
                             type: string
                         required:
                           - path
+                        type: object
+                      image:
+                        description: |-
+                          image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's host machine.
+                          The volume is resolved at pod startup depending on which PullPolicy value is provided:
+
+                          - Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.
+                          - Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.
+                          - IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
+
+                          The volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation.
+                          A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message.
+                          The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field.
+                          The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images.
+                          The volume will be mounted read-only (ro) and non-executable files (noexec).
+                          Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath).
+                          The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
+                        properties:
+                          pullPolicy:
+                            description: |-
+                              Policy for pulling OCI objects. Possible values are:
+                              Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.
+                              Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.
+                              IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
+                              Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+                            type: string
+                          reference:
+                            description: |-
+                              Required: Image or artifact reference to be used.
+                              Behaves in the same way as pod.spec.containers[*].image.
+                              Pull secrets will be assembled in the same way as for the container image by looking up node credentials, SA image pull secrets, and pod spec image pull secrets.
+                              More info: https://kubernetes.io/docs/concepts/containers/images
+                              This field is optional to allow higher level config management to default or override
+                              container images in workload controllers like Deployments and StatefulSets.
+                            type: string
                         type: object
                       iscsi:
                         description: |-
@@ -1070,7 +1120,6 @@ spec:
                               Tip: Ensure that the filesystem type is supported by the host operating system.
                               Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
                               More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi
-                              TODO: how do we prevent errors in the filesystem from compromising the machine
                             type: string
                           initiatorName:
                             description: |-
@@ -1082,6 +1131,7 @@ spec:
                             description: iqn is the target iSCSI Qualified Name.
                             type: string
                           iscsiInterface:
+                            default: default
                             description: |-
                               iscsiInterface is the interface Name that uses an iSCSI transport.
                               Defaults to 'default' (tcp).
@@ -1097,6 +1147,7 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                           readOnly:
                             description: |-
                               readOnly here will force the ReadOnly setting in VolumeMounts.
@@ -1106,10 +1157,13 @@ spec:
                             description: secretRef is the CHAP Secret for iSCSI target and initiator authentication
                             properties:
                               name:
+                                default: ""
                                 description: |-
                                   Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
                                   More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind, uid?
                                 type: string
                             type: object
                             x-kubernetes-map-type: atomic
@@ -1222,22 +1276,23 @@ spec:
                             format: int32
                             type: integer
                           sources:
-                            description: sources is the list of volume projections
+                            description: |-
+                              sources is the list of volume projections. Each entry in this list
+                              handles one source.
                             items:
-                              description: Projection that may be projected along with other supported volume types
+                              description: |-
+                                Projection that may be projected along with other supported volume types.
+                                Exactly one of these fields must be set.
                               properties:
                                 clusterTrustBundle:
                                   description: |-
                                     ClusterTrustBundle allows a pod to access the `.spec.trustBundle` field
                                     of ClusterTrustBundle objects in an auto-updating file.
 
-
                                     Alpha, gated by the ClusterTrustBundleProjection feature gate.
-
 
                                     ClusterTrustBundle objects can either be selected by name, or by the
                                     combination of signer name and a label selector.
-
 
                                     Kubelet performs aggressive normalization of the PEM contents written
                                     into the pod filesystem.  Esoteric PEM features such as inter-block
@@ -1276,11 +1331,13 @@ spec:
                                                 items:
                                                   type: string
                                                 type: array
+                                                x-kubernetes-list-type: atomic
                                             required:
                                               - key
                                               - operator
                                             type: object
                                           type: array
+                                          x-kubernetes-list-type: atomic
                                         matchLabels:
                                           additionalProperties:
                                             type: string
@@ -1356,11 +1413,15 @@ spec:
                                           - path
                                         type: object
                                       type: array
+                                      x-kubernetes-list-type: atomic
                                     name:
+                                      default: ""
                                       description: |-
                                         Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
                                         More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                        TODO: Add other useful fields. apiVersion, kind, uid?
                                       type: string
                                     optional:
                                       description: optional specify whether the ConfigMap or its keys must be defined
@@ -1376,7 +1437,7 @@ spec:
                                         description: DownwardAPIVolumeFile represents information to create the file containing the pod field
                                         properties:
                                           fieldRef:
-                                            description: 'Required: Selects a field of the pod: only annotations, labels, name and namespace are supported.'
+                                            description: 'Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are supported.'
                                             properties:
                                               apiVersion:
                                                 description: Version of the schema the FieldPath is written in terms of, defaults to "v1".
@@ -1427,6 +1488,7 @@ spec:
                                           - path
                                         type: object
                                       type: array
+                                      x-kubernetes-list-type: atomic
                                   type: object
                                 secret:
                                   description: secret information about the secret data to project
@@ -1468,11 +1530,15 @@ spec:
                                           - path
                                         type: object
                                       type: array
+                                      x-kubernetes-list-type: atomic
                                     name:
+                                      default: ""
                                       description: |-
                                         Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
                                         More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                        TODO: Add other useful fields. apiVersion, kind, uid?
                                       type: string
                                     optional:
                                       description: optional field specify whether the Secret or its key must be defined
@@ -1509,6 +1575,7 @@ spec:
                                   type: object
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                         type: object
                       quobyte:
                         description: quobyte represents a Quobyte mount on the host that shares a pod's lifetime
@@ -1557,7 +1624,6 @@ spec:
                               Tip: Ensure that the filesystem type is supported by the host operating system.
                               Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
                               More info: https://kubernetes.io/docs/concepts/storage/volumes#rbd
-                              TODO: how do we prevent errors in the filesystem from compromising the machine
                             type: string
                           image:
                             description: |-
@@ -1565,6 +1631,7 @@ spec:
                               More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
                             type: string
                           keyring:
+                            default: /etc/ceph/keyring
                             description: |-
                               keyring is the path to key ring for RBDUser.
                               Default is /etc/ceph/keyring.
@@ -1577,7 +1644,9 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                           pool:
+                            default: rbd
                             description: |-
                               pool is the rados pool name.
                               Default is rbd.
@@ -1597,14 +1666,18 @@ spec:
                               More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
                             properties:
                               name:
+                                default: ""
                                 description: |-
                                   Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
                                   More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind, uid?
                                 type: string
                             type: object
                             x-kubernetes-map-type: atomic
                           user:
+                            default: admin
                             description: |-
                               user is the rados user name.
                               Default is admin.
@@ -1618,6 +1691,7 @@ spec:
                         description: scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.
                         properties:
                           fsType:
+                            default: xfs
                             description: |-
                               fsType is the filesystem type to mount.
                               Must be a filesystem type supported by the host operating system.
@@ -1641,10 +1715,13 @@ spec:
                               sensitive information. If this is not provided, Login operation will fail.
                             properties:
                               name:
+                                default: ""
                                 description: |-
                                   Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
                                   More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind, uid?
                                 type: string
                             type: object
                             x-kubernetes-map-type: atomic
@@ -1652,6 +1729,7 @@ spec:
                             description: sslEnabled Flag enable/disable SSL communication with Gateway, default false
                             type: boolean
                           storageMode:
+                            default: ThinProvisioned
                             description: |-
                               storageMode indicates whether the storage for a volume should be ThickProvisioned or ThinProvisioned.
                               Default is ThinProvisioned.
@@ -1725,6 +1803,7 @@ spec:
                                 - path
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           optional:
                             description: optional field specify whether the Secret or its keys must be defined
                             type: boolean
@@ -1754,10 +1833,13 @@ spec:
                               credentials.  If not specified, default values will be attempted.
                             properties:
                               name:
+                                default: ""
                                 description: |-
                                   Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
                                   More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind, uid?
                                 type: string
                             type: object
                             x-kubernetes-map-type: atomic

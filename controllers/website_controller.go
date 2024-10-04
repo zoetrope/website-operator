@@ -941,14 +941,11 @@ func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 
-	ch := make(chan event.GenericEvent)
+	ch := make(chan event.TypedGenericEvent[*websitev1beta1.WebSite])
 	watcher := newRevisionWatcher(mgr.GetClient(), mgr.GetLogger().WithName("RevisionWatcher"), ch, 1*time.Minute, r.revisionClient)
 	err = mgr.Add(watcher)
 	if err != nil {
 		return err
-	}
-	src := source.Channel{
-		Source: ch,
 	}
 
 	logger := mgr.GetLogger().WithName("ConfigMap Handler")
@@ -991,7 +988,7 @@ func (r *WebSiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.ConfigMap{}).
 		Owns(&batchv1.Job{}).
-		WatchesRawSource(&src, &handler.EnqueueRequestForObject{}).
+		WatchesRawSource(source.Channel(ch, &handler.TypedEnqueueRequestForObject[*websitev1beta1.WebSite]{})).
 		Watches(&corev1.ConfigMap{}, handler.EnqueueRequestsFromMapFunc(cmHandler)).
 		Complete(r)
 }
