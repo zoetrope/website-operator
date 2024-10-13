@@ -3,7 +3,7 @@
 # https://aquaproj.github.io/
 registries:
   - type: standard
-    ref: v4.228.0 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.233.0 # renovate: depName=aquaproj/aqua-registry
 packages:
   - name: arttor/helmify@v0.4.14
   - name: goreleaser/goreleaser@v2.3.2
