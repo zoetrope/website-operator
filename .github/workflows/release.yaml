@@ -5,7 +5,7 @@ on:
       - 'v*'
 jobs:
   release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   chart-release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: release
     if: contains(needs.release.result, 'success')
     steps:
