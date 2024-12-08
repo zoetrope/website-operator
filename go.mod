@@ -2,7 +2,7 @@ module github.com/zoetrope/website-operator
 
 go 1.22.5
 
-toolchain go1.23.3
+toolchain go1.23.4
 
 require (
 	github.com/cybozu-go/log v1.7.0
