@@ -32,7 +32,7 @@ jobs:
       matrix:
         k8s-version:
           - v1.29.12 # renovate: kindest/node
-          - v1.30.4 # renovate: kindest/node
+          - v1.30.8 # renovate: kindest/node
           - v1.31.1 # renovate: kindest/node
     steps:
       - uses: actions/checkout@v4
