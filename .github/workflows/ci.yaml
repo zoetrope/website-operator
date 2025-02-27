@@ -33,7 +33,7 @@ jobs:
         k8s-version:
           - v1.29.14 # renovate: kindest/node
           - v1.30.10 # renovate: kindest/node
-          - v1.31.4 # renovate: kindest/node
+          - v1.31.6 # renovate: kindest/node
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
