@@ -1,4 +1,4 @@
-FROM ghcr.io/zoetrope/ubuntu:20.04
+FROM ghcr.io/zoetrope/ubuntu:24.04
 
 LABEL org.opencontainers.image.source https://github.com/zoetrope/website-operator
 
