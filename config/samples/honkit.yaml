@@ -12,3 +12,11 @@ spec:
   repoURL: https://github.com/zoetrope/honkit-sample.git
   branch: main
   publicURL: http://localhost:9090
+  nginxContainerResources:
+    requests:
+      memory: "100Mi"
+      cpu: "10m"
+  repoCheckerContainerResources:
+    requests:
+      memory: "100Mi"
+      cpu: "10m"
