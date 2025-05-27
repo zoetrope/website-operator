@@ -13,6 +13,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
@@ -179,6 +180,33 @@ cp -r _book/* $OUTPUT/
 			Expect(dep.Spec.Template.Spec.ImagePullSecrets).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("myimagepullsecret")})))
 		})
 
+		It("should create RepoChecker Deployment with ContainerResources", func() {
+			site := newWebSite().withRawBuildScript().withRepoCheckerContainerResources().build()
+			err := k8sClient.Create(ctx, site)
+			Expect(err).NotTo(HaveOccurred())
+
+			dep := appsv1.Deployment{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite-repo-checker"}, &dep)
+			}).Should(Succeed())
+
+			Expect(dep.Spec.Template.Spec.Containers).Should(HaveLen(1))
+			Expect(dep.Spec.Template.Spec.Containers[0].Name).Should(Equal("repo-checker"))
+			Expect(dep.Spec.Template.Spec.Containers[0].Command).Should(ContainElement("--repo-branch=main"))
+			Expect(dep.Spec.Template.Spec.Containers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(dep.Spec.Template.Spec.Volumes).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+
+			Expect(dep.Spec.Template.Spec.Containers[0].Resources).Should(Equal(corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("10m"),
+					corev1.ResourceMemory: resource.MustParse("100Mi"),
+					},
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("100Mi"),
+					},
+			}))
+		})
+
 		It("should create RepoChecker Service", func() {
 			site := newWebSite().withRawBuildScript().build()
 			err := k8sClient.Create(ctx, site)
@@ -327,6 +355,38 @@ cp -r _book/* $OUTPUT/
 			Expect(dep.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("build-script")})))
 			Expect(dep.Spec.Template.Spec.Volumes).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
 			Expect(dep.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
+		})
+
+		It("should create Nginx Deployment with ContainerResources", func() {
+			site := newWebSite().withRawBuildScript().withNginxContainerResource().build()
+			err := k8sClient.Create(ctx, site)
+			Expect(err).NotTo(HaveOccurred())
+
+			dep := appsv1.Deployment{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: "test", Name: "mysite"}, &dep)
+			}).Should(Succeed())
+			Expect(*dep.Spec.Replicas).Should(BeNumerically("==", 1))
+			Expect(dep.Spec.Template.Labels).Should(HaveLen(3))
+			Expect(dep.Spec.Template.Annotations).Should(HaveLen(1))
+			Expect(dep.Spec.Template.Annotations).Should(HaveKey(AnnChecksumConfig))
+			Expect(dep.Spec.Template.Spec.Containers).Should(HaveLen(1))
+			Expect(dep.Spec.Template.Spec.InitContainers).Should(HaveLen(1))
+			Expect(dep.Spec.Template.Spec.InitContainers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(dep.Spec.Template.Spec.InitContainers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
+			Expect(dep.Spec.Template.Spec.Volumes).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("build-script")})))
+			Expect(dep.Spec.Template.Spec.Volumes).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
+			Expect(dep.Spec.Template.Spec.ImagePullSecrets).Should(BeEmpty())
+
+			Expect(dep.Spec.Template.Spec.Containers[0].Resources).Should(Equal(corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("20m"),
+					corev1.ResourceMemory: resource.MustParse("200Mi"),
+					},
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("200Mi"),
+					},
+			}))
 		})
 
 		It("should create Nginx Service with ServiceTemplate", func() {
@@ -635,6 +695,32 @@ func (b *websiteBuilder) withPodTemplate() *websiteBuilder {
 			Annotations: map[string]string{
 				"myann": "bar",
 			},
+		},
+	}
+	return b
+}
+
+func (b *websiteBuilder) withNginxContainerResource() *websiteBuilder {
+	b.website.Spec.NginxContainerResources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("20m"),
+			corev1.ResourceMemory: resource.MustParse("200Mi"),
+		},
+		Limits: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("200Mi"),
+		},
+	}
+	return b
+}
+
+func (b *websiteBuilder) withRepoCheckerContainerResources() *websiteBuilder {
+	b.website.Spec.RepoCheckerContainerResources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("10m"),
+			corev1.ResourceMemory: resource.MustParse("100Mi"),
+		},
+		Limits: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("100Mi"),
 		},
 	}
 	return b

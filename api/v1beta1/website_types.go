@@ -55,9 +55,17 @@ type WebSiteSpec struct {
 	// +optional
 	PodTemplate *PodTemplate `json:"podTemplate,omitempty"`
 
+	// NginxContainerResources nginx container resource request and limits.
+	// +optional
+	NginxContainerResources corev1.ResourceRequirements `json:"nginxContainerResources,omitempty"`
+
 	// VolumeTemplates are `Volume` templates for nginx container.
 	// +optional
 	VolumeTemplates []corev1.Volume `json:"volumeTemplates,omitempty"`
+
+	// RepoCheckerContainerResources repo-checker container resource request and limits.
+	// +optional
+	RepoCheckerContainerResources corev1.ResourceRequirements `json:"repoCheckerContainerResources,omitempty"`
 
 	// ServiceTemplate is a `Service` template for nginx.
 	// +optional

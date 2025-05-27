@@ -324,6 +324,7 @@ func (r *WebSiteReconciler) makePodTemplateForRepoChecker(webSite *websitev1beta
 	container := corev1.Container{
 		Name:  "repo-checker",
 		Image: r.repoCheckerContainerImage,
+		Resources: webSite.Spec.RepoCheckerContainerResources,
 		Command: []string{"/repo-checker",
 			fmt.Sprintf("--repo-url=%s", webSite.Spec.RepoURL),
 			fmt.Sprintf("--repo-branch=%s", webSite.Spec.Branch),
@@ -536,6 +537,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 	newTemplate.Spec.Containers = append(newTemplate.Spec.Containers, corev1.Container{
 		Name:  "nginx",
 		Image: r.nginxContainerImage,
+		Resources: webSite.Spec.NginxContainerResources,
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				MountPath: "/data",
