@@ -60,18 +60,18 @@ spec:
 ```
 
 You can specify the following fields:
-
-| Name                | Required | Description                                                                             |
-| ------------------- | -------- | --------------------------------------------------------------------------------------- |
-| buildImage          | `true`   | The name of a container image to build your site                                        |
-| buildScript         | `true`   | A script to build your site                                                             |
-| repoURL             | `true`   | The URL of a repository that holds your site's content                                  |
-| branch              | `true`   | The branch of the repository you want to deploy                                         |
-| deployKeySecretName | `false`  | The name of a secret resource that holds a deploy key to access your private repository |
-| extraResources      | `false`  | Any extra resources you want to deploy                                                  |
-| replicas            | `false`  | The number of nginx instances                                                           |
-| afterBuildScript    | `false`  | A script to execute in Job once after build (ex. registering search index)              |
-
+| Name                          | Required | Description                                                                             |
+| ----------------------------- | -------- | --------------------------------------------------------------------------------------- |
+| buildImage                    | `true`   | The name of a container image to build your site                                        |
+| buildScript                   | `true`   | A script to build your site                                                             |
+| repoURL                       | `true`   | The URL of a repository that holds your site's content                                  |
+| branch                        | `true`   | The branch of the repository you want to deploy                                         |
+| deployKeySecretName           | `false`  | The name of a secret resource that holds a deploy key to access your private repository |
+| extraResources                | `false`  | Any extra resources you want to deploy                                                  |
+| replicas                      | `false`  | The number of nginx instances                                                           |
+| afterBuildScript              | `false`  | A script to execute in Job once after build (ex. registering search index)              |
+| nginxContainerResources       | `false`  | nginx container resource request and limits                                             |
+| repoCheckerContainerResources | `false`  | repo-checker container resource request and limits                                      |
 In the build script, you have to copy your built output to `$OUTPUT` directory.
 
 The following environment variables are available in the build script:
