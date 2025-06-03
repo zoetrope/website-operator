@@ -480,6 +480,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 
 func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *websitev1beta1.WebSite, revision string, hash string) (*corev1.PodTemplateSpec, error) {
 	newTemplate := corev1.PodTemplateSpec{}
+	newResourceRequirements := corev1.ResourceRequirements{}
 
 	newTemplate.Labels = make(map[string]string)
 	newTemplate.Annotations = make(map[string]string)
@@ -490,6 +491,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 		for k, v := range webSite.Spec.PodTemplate.Annotations {
 			newTemplate.Annotations[k] = v
 		}
+		newResourceRequirements = webSite.Spec.PodTemplate.NginxContainerResources
 	}
 
 	newTemplate.Labels[ManagedByKey] = OperatorName
@@ -536,6 +538,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 	newTemplate.Spec.Containers = append(newTemplate.Spec.Containers, corev1.Container{
 		Name:  "nginx",
 		Image: r.nginxContainerImage,
+		Resources: newResourceRequirements,
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				MountPath: "/data",

@@ -13,6 +13,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
@@ -321,6 +322,15 @@ cp -r _book/* $OUTPUT/
 			Expect(dep.Spec.Template.Annotations).Should(HaveKey("myann"))
 			Expect(dep.Spec.Template.Annotations).Should(HaveKey(AnnChecksumConfig))
 			Expect(dep.Spec.Template.Spec.Containers).Should(HaveLen(1))
+			Expect(dep.Spec.Template.Spec.Containers[0].Resources).Should(Equal(corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("10m"),
+					corev1.ResourceMemory: resource.MustParse("100Mi"),
+					},
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("100Mi"),
+					},
+			}))
 			Expect(dep.Spec.Template.Spec.InitContainers).Should(HaveLen(1))
 			Expect(dep.Spec.Template.Spec.InitContainers[0].VolumeMounts).ShouldNot(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("deploy-key")})))
 			Expect(dep.Spec.Template.Spec.InitContainers[0].Env).Should(ContainElement(MatchFields(IgnoreExtras, Fields{"Name": Equal("REVISION"), "Value": Equal("rev1")})))
@@ -634,6 +644,15 @@ func (b *websiteBuilder) withPodTemplate() *websiteBuilder {
 			},
 			Annotations: map[string]string{
 				"myann": "bar",
+			},
+		},
+		NginxContainerResources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("10m"),
+				corev1.ResourceMemory: resource.MustParse("100Mi"),
+			},
+			Limits: corev1.ResourceList{
+				corev1.ResourceMemory: resource.MustParse("100Mi"),
 			},
 		},
 	}

@@ -97,6 +97,10 @@ type PodTemplate struct {
 	// Standard object's metadata.  Only `annotations` and `labels` are valid.
 	// +optional
 	ObjectMeta `json:"metadata,omitempty"`
+
+	// NginxContainerResources nginx container resource request and limits.
+	// +optional
+	NginxContainerResources corev1.ResourceRequirements `json:"nginxContainerResources,omitempty"`
 }
 
 // ServiceTemplate defines the desired spec and annotations of Service
