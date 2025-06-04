@@ -376,7 +376,7 @@ metadata:
 spec:
   containers:
   - name: ubuntu
-    image: ghcr.io/zoetrope/ubuntu:20.04
+    image: ghcr.io/zoetrope/ubuntu:24.04
     command: ["/usr/local/bin/pause"]
 `,
 			}
