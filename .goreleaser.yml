@@ -53,6 +53,7 @@ dockers:
     extra_files:
       - LICENSE
     build_flag_templates:
+      - "--target=website-operator"
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -66,6 +67,7 @@ dockers:
     extra_files:
       - LICENSE
     build_flag_templates:
+      - "--target=website-operator"
       - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -73,13 +75,14 @@ dockers:
   - image_templates:
       - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-amd64"
     use: buildx
-    dockerfile: ./Dockerfile.ui
+    dockerfile: ./Dockerfile
     ids:
       - website-operator-ui
     extra_files:
       - LICENSE
       - ui/frontend/dist
     build_flag_templates:
+      - "--target=ui"
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -87,13 +90,14 @@ dockers:
   - image_templates:
       - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-arm64"
     use: buildx
-    dockerfile: ./Dockerfile.ui
+    dockerfile: ./Dockerfile
     ids:
       - website-operator-ui
     extra_files:
       - LICENSE
       - ui/frontend/dist
     build_flag_templates:
+      - "--target=ui"
       - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -101,12 +105,13 @@ dockers:
   - image_templates:
     - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-amd64"
     use: buildx
-    dockerfile: ./Dockerfile.repo-checker
+    dockerfile: ./Dockerfile
     ids:
       - repo-checker
     extra_files:
       - LICENSE
     build_flag_templates:
+      - "--target=repo-checker"
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
@@ -114,12 +119,13 @@ dockers:
   - image_templates:
       - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-arm64"
     use: buildx
-    dockerfile: ./Dockerfile.repo-checker
+    dockerfile: ./Dockerfile
     ids:
       - repo-checker
     extra_files:
       - LICENSE
     build_flag_templates:
+      - "--target=repo-checker"
       - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
