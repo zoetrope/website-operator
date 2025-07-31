@@ -178,6 +178,31 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
+              nginxConf:
+                description: NginxConf is a configuration file for nginx.
+                properties:
+                  configMap:
+                    description: ConfigMapName is the name of the ConfigMap
+                    properties:
+                      key:
+                        description: Key is the name of a key
+                        type: string
+                      name:
+                        description: Name is the name of a configmap resource
+                        type: string
+                      namespace:
+                        description: |-
+                          Namespace is the namespace of a configmap resource
+                          if omitted, it will be the same namespace as the WebSite resource
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
+                  rawData:
+                    description: RawData is raw data
+                    type: string
+                type: object
               podTemplate:
                 description: PodTemplate is a `Pod` template for nginx container.
                 properties:
