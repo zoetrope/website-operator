@@ -63,6 +63,10 @@ type WebSiteSpec struct {
 	// +optional
 	ServiceTemplate *ServiceTemplate `json:"serviceTemplate,omitempty"`
 
+	// NginxConf is a configuration file for nginx.
+	// +optional
+	NginxConf *DataSource `json:"nginxConf,omitempty"`
+
 	// AfterBuildScript is a script to execute in Job once after build
 	// +optional
 	AfterBuildScript *DataSource `json:"afterBuildScript"`

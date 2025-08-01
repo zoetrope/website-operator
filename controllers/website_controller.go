@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	_ "embed"
 	"errors"
 	"fmt"
 	"strings"
@@ -23,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -40,6 +41,7 @@ const (
 	AppNameRepoChecker        = "repo-checker"
 	AppNameRepoCheckerService = "repo-checker-service"
 	AppNameNginx              = "nginx"
+	AppNameNginxConf          = "nginx-conf"
 	AppNameNginxService       = "nginx-service"
 	ManagedByKey              = "app.kubernetes.io/managed-by"
 	AppNameKey                = "app.kubernetes.io/name"
@@ -172,7 +174,14 @@ func (r *WebSiteReconciler) reconcile(ctx context.Context, webSite *websitev1bet
 		return isUpdatedAtLeastOnce, "", err
 	}
 
-	isUpdated, err = r.reconcileNginxDeployment(ctx, webSite, revision, buildScriptHash)
+	isUpdated, nginxConfHash, err := r.reconcileNginxConfigMap(ctx, webSite, webSite.Spec.NginxConf)
+	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
+	if err != nil {
+		log.Error(err, "failed to create or update nginx.conf")
+		return isUpdatedAtLeastOnce, revision, err
+	}
+
+	isUpdated, err = r.reconcileNginxDeployment(ctx, webSite, revision, buildScriptHash, nginxConfHash)
 	isUpdatedAtLeastOnce = isUpdatedAtLeastOnce || isUpdated
 	if err != nil {
 		log.Error(err, "failed to create or update Deployment For Nginx")
@@ -274,7 +283,7 @@ func (r *WebSiteReconciler) reconcileRepoCheckerDeployment(ctx context.Context, 
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.client, deployment, func() error {
 		setStandardLabels(AppNameRepoChecker, &deployment.ObjectMeta)
-		deployment.Spec.Replicas = pointer.Int32Ptr(1)
+		deployment.Spec.Replicas = ptr.To[int32](1)
 		deployment.Spec.Selector = &metav1.LabelSelector{}
 		if deployment.Spec.Selector.MatchLabels == nil {
 			deployment.Spec.Selector.MatchLabels = make(map[string]string)
@@ -338,8 +347,8 @@ func (r *WebSiteReconciler) makePodTemplateForRepoChecker(webSite *websitev1beta
 	}
 
 	newTemplate.Spec.SecurityContext = &corev1.PodSecurityContext{
-		RunAsUser: pointer.Int64Ptr(10000),
-		FSGroup:   pointer.Int64Ptr(10000),
+		RunAsUser: ptr.To[int64](10000),
+		FSGroup:   ptr.To[int64](10000),
 	}
 
 	if webSite.Spec.DeployKeySecretName != nil {
@@ -349,7 +358,7 @@ func (r *WebSiteReconciler) makePodTemplateForRepoChecker(webSite *websitev1beta
 				VolumeSource: corev1.VolumeSource{
 					Secret: &corev1.SecretVolumeSource{
 						SecretName:  *webSite.Spec.DeployKeySecretName,
-						DefaultMode: pointer.Int32Ptr(0600),
+						DefaultMode: ptr.To[int32](0600),
 					},
 				},
 			},
@@ -439,7 +448,7 @@ func (r *WebSiteReconciler) reconcileRepoCheckerService(ctx context.Context, web
 
 var errRevisionNotReady = errors.New("latest revision not ready")
 
-func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSite *websitev1beta1.WebSite, revision string, hash string) (bool, error) {
+func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSite *websitev1beta1.WebSite, revision string, buildScriptHash, nginxConfHash string) (bool, error) {
 	log := r.log.WithValues("website", webSite.Name)
 	deployment := &appsv1.Deployment{}
 	deployment.SetNamespace(webSite.Namespace)
@@ -455,7 +464,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 		deployment.Spec.Selector.MatchLabels[ManagedByKey] = OperatorName
 		deployment.Spec.Selector.MatchLabels[AppNameKey] = AppNameNginx
 
-		podTemplate, err := r.makeNginxPodTemplate(ctx, webSite, revision, hash)
+		podTemplate, err := r.makeNginxPodTemplate(ctx, webSite, revision, buildScriptHash, nginxConfHash)
 		if err != nil {
 			return err
 		}
@@ -478,7 +487,7 @@ func (r *WebSiteReconciler) reconcileNginxDeployment(ctx context.Context, webSit
 	return false, nil
 }
 
-func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *websitev1beta1.WebSite, revision string, hash string) (*corev1.PodTemplateSpec, error) {
+func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *websitev1beta1.WebSite, revision string, buildScriptHash, nginxConfHash string) (*corev1.PodTemplateSpec, error) {
 	newTemplate := corev1.PodTemplateSpec{}
 
 	newTemplate.Labels = make(map[string]string)
@@ -495,7 +504,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 	newTemplate.Labels[ManagedByKey] = OperatorName
 	newTemplate.Labels[AppNameKey] = AppNameNginx
 	newTemplate.Labels[InstanceKey] = webSite.Name
-	newTemplate.Annotations[AnnChecksumConfig] = hash
+	newTemplate.Annotations[AnnChecksumConfig] = buildScriptHash + "-" + nginxConfHash
 
 	newTemplate.Spec.Volumes = append(newTemplate.Spec.Volumes, getVolumeOrEmptyDir(webSite, "data"))
 	newTemplate.Spec.Volumes = append(newTemplate.Spec.Volumes, getVolumeOrEmptyDir(webSite, "log"))
@@ -511,7 +520,18 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: webSite.Name + "-" + BuildScriptName + "-script",
 					},
-					DefaultMode: pointer.Int32Ptr(0755),
+					DefaultMode: ptr.To[int32](0755),
+				},
+			},
+		},
+		corev1.Volume{
+			Name: "nginx-conf",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: webSite.Name + "-nginx-conf",
+					},
+					DefaultMode: ptr.To[int32](0644),
 				},
 			},
 		},
@@ -523,14 +543,14 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 				VolumeSource: corev1.VolumeSource{
 					Secret: &corev1.SecretVolumeSource{
 						SecretName:  *webSite.Spec.DeployKeySecretName,
-						DefaultMode: pointer.Int32Ptr(0600),
+						DefaultMode: ptr.To[int32](0600),
 					},
 				},
 			},
 		)
 	}
 	newTemplate.Spec.SecurityContext = &corev1.PodSecurityContext{
-		FSGroup: pointer.Int64Ptr(10000),
+		FSGroup: ptr.To[int64](10000),
 	}
 
 	newTemplate.Spec.Containers = append(newTemplate.Spec.Containers, corev1.Container{
@@ -553,15 +573,20 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 				MountPath: "/tmp",
 				Name:      "tmp",
 			},
+			{
+				MountPath: "/etc/nginx/nginx/conf",
+				SubPath:   "nginx.conf",
+				Name:      "nginx-conf",
+			},
 		},
 		SecurityContext: &corev1.SecurityContext{
-			RunAsUser: pointer.Int64Ptr(33), // id for www-data
+			RunAsUser: ptr.To[int64](33), // id for www-data
 		},
 		ReadinessProbe: &corev1.Probe{
 			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path:        "/",
-					Port:        intstr.FromInt(8080),
+					Port:        intstr.FromInt32(8080),
 					HTTPHeaders: nil,
 				},
 			},
@@ -578,7 +603,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 		Image:   webSite.Spec.BuildImage,
 		Command: []string{"/bin/bash", "-c", "/build/" + BuildScriptName + ".sh"},
 		SecurityContext: &corev1.SecurityContext{
-			RunAsUser: pointer.Int64Ptr(10000),
+			RunAsUser: ptr.To[int64](10000),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
@@ -640,6 +665,64 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 
 	newTemplate.Spec.InitContainers = append(newTemplate.Spec.InitContainers, buildContainer)
 	return &newTemplate, nil
+}
+
+//go:embed nginx.conf
+var defaultNginxConf string
+
+func (r *WebSiteReconciler) reconcileNginxConfigMap(ctx context.Context, webSite *websitev1beta1.WebSite, source *websitev1beta1.DataSource) (bool, string, error) {
+	log := r.log.WithValues("website", webSite.Name)
+
+	conf := ""
+	if source == nil {
+		conf = defaultNginxConf
+	} else if source.RawData != nil {
+		conf = *source.RawData
+	} else if source.ConfigMap != nil {
+		nginxConfConfigMap := &corev1.ConfigMap{}
+		ns := r.operatorNamespace
+		if len((*source.ConfigMap).Namespace) != 0 {
+			ns = (*source.ConfigMap).Namespace
+		}
+		err := r.client.Get(ctx, client.ObjectKey{Namespace: ns, Name: (*source.ConfigMap).Name}, nginxConfConfigMap)
+		if err != nil {
+			return false, "", err
+		}
+		var ok bool
+		conf, ok = nginxConfConfigMap.Data[(*source.ConfigMap).Key]
+		if !ok {
+			return false, "", fmt.Errorf("ConfigMap %s:%s does not have %s", ns, (*source.ConfigMap).Name, (*source.ConfigMap).Key)
+		}
+	}
+
+	cm := &corev1.ConfigMap{}
+	cm.SetNamespace(webSite.Namespace)
+	cm.SetName(webSite.Name + "-nginx-conf")
+	hash := fmt.Sprintf("%x", md5.Sum([]byte(conf)))
+
+	op, err := ctrl.CreateOrUpdate(ctx, r.client, cm, func() error {
+		setStandardLabels(AppNameNginxConf, &cm.ObjectMeta)
+		if cm.Annotations == nil {
+			cm.Annotations = make(map[string]string)
+		}
+		cm.Annotations[AnnChecksumConfig] = hash
+
+		cm.Data = map[string]string{
+			"nginx.conf": conf,
+		}
+		return ctrl.SetControllerReference(webSite, cm, r.scheme)
+	})
+
+	if err != nil {
+		log.Error(err, "unable to reconcile nginx.conf configmap")
+		return false, hash, err
+	}
+
+	if op != controllerutil.OperationResultNone {
+		log.Info("reconcile nginx.conf configmap successfully", "op", op)
+		return true, hash, nil
+	}
+	return false, hash, nil
 }
 
 func (r *WebSiteReconciler) reconcileNginxService(ctx context.Context, webSite *websitev1beta1.WebSite) (bool, error) {
@@ -796,7 +879,7 @@ func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSi
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: webSite.Name + "-" + AfterBuildScriptName + "-script",
 					},
-					DefaultMode: pointer.Int32Ptr(0755),
+					DefaultMode: ptr.To[int32](0755),
 				},
 			},
 		},
@@ -809,21 +892,21 @@ func (r *WebSiteReconciler) reconcileAfterBuildScript(ctx context.Context, webSi
 				VolumeSource: corev1.VolumeSource{
 					Secret: &corev1.SecretVolumeSource{
 						SecretName:  *webSite.Spec.DeployKeySecretName,
-						DefaultMode: pointer.Int32Ptr(0600),
+						DefaultMode: ptr.To[int32](0600),
 					},
 				},
 			},
 		)
 	}
 	template.Spec.SecurityContext = &corev1.PodSecurityContext{
-		FSGroup: pointer.Int64Ptr(10000),
+		FSGroup: ptr.To[int64](10000),
 	}
 	buildContainer := corev1.Container{
 		Name:    "job",
 		Image:   webSite.Spec.BuildImage,
 		Command: []string{"/bin/bash", "-c", "/after-build/" + AfterBuildScriptName + ".sh"},
 		SecurityContext: &corev1.SecurityContext{
-			RunAsUser: pointer.Int64Ptr(10000),
+			RunAsUser: ptr.To[int64](10000),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
