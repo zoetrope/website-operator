@@ -1,7 +1,7 @@
 package website
 
 const (
-	DefaultNginxContainerImage = "ghcr.io/zoetrope/nginx:1.22.1"
+	DefaultNginxContainerImage = "ghcr.io/zoetrope/nginx:1.28.0"
 	WebSiteIndexField          = ".status.ready"
 )
 
