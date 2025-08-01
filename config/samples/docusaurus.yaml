@@ -4,7 +4,7 @@ metadata:
   name: docusaurus-sample
   namespace: default
 spec:
-  buildImage: ghcr.io/zoetrope/node:18.12.1
+  buildImage: ghcr.io/zoetrope/node:22.16.0
   buildScript:
     rawData: |
         #!/bin/bash -ex

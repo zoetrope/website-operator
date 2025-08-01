@@ -4,7 +4,7 @@ metadata:
   name: honkit-sample-es
   namespace: default
 spec:
-  buildImage: ghcr.io/zoetrope/node:18.12.1
+  buildImage: ghcr.io/zoetrope/node:22.16.0
   buildScript:
     configMap:
       name: build-scripts
