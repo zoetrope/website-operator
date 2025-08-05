@@ -574,7 +574,7 @@ func (r *WebSiteReconciler) makeNginxPodTemplate(ctx context.Context, webSite *w
 				Name:      "tmp",
 			},
 			{
-				MountPath: "/etc/nginx/nginx/conf",
+				MountPath: "/etc/nginx/nginx.conf",
 				SubPath:   "nginx.conf",
 				Name:      "nginx-conf",
 			},
