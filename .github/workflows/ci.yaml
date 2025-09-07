@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - uses: aquaproj/aqua-installer@d1fe50798dbadd4eb5b98957290ca175f6b4870f # v4.0.2
@@ -36,7 +36,7 @@ jobs:
           - v1.33.4 # renovate: kindest/node
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - uses: aquaproj/aqua-installer@d1fe50798dbadd4eb5b98957290ca175f6b4870f # v4.0.2
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - uses: goreleaser/goreleaser-action@v6
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - uses: aquaproj/aqua-installer@d1fe50798dbadd4eb5b98957290ca175f6b4870f # v4.0.2
@@ -101,7 +101,7 @@ jobs:
           fetch-depth: 0
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - uses: aquaproj/aqua-installer@d1fe50798dbadd4eb5b98957290ca175f6b4870f # v4.0.2
