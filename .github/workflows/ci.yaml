@@ -46,6 +46,7 @@ jobs:
         with:
           node-version: 24
           cache: 'pnpm'
+          cache-dependency-path: ./ui/frontend/pnpm-lock.yaml
       - uses: aquaproj/aqua-installer@d1fe50798dbadd4eb5b98957290ca175f6b4870f # v4.0.2
         with:
           aqua_version: v2.53.9
@@ -97,6 +98,7 @@ jobs:
         with:
           node-version: 24
           cache: 'pnpm'
+          cache-dependency-path: ./ui/frontend/pnpm-lock.yaml
       - uses: aquaproj/aqua-installer@d1fe50798dbadd4eb5b98957290ca175f6b4870f # v4.0.2
         with:
           aqua_version: v2.53.9
@@ -125,6 +127,7 @@ jobs:
         with:
           node-version: 24
           cache: 'pnpm'
+          cache-dependency-path: ./ui/frontend/pnpm-lock.yaml
       - uses: aquaproj/aqua-installer@d1fe50798dbadd4eb5b98957290ca175f6b4870f # v4.0.2
         with:
           aqua_version: v2.53.9
