@@ -88,7 +88,7 @@ $(WEBSITE_OPERATOR_UI): $(GO_FILES)
 
 .PHONY: frontend
 frontend:
-	cd ui/frontend && npm install && npm run build
+	cd ui/frontend && pnpm install && pnpm run build
 
 .PHONY: setup
 setup: setup-envtest
