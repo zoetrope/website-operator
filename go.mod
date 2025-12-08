@@ -1,6 +1,6 @@
 module github.com/zoetrope/website-operator
 
-go 1.24.4
+go 1.25.5
 
 require (
 	github.com/cybozu-go/log v1.7.0
