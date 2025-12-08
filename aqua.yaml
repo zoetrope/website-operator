@@ -11,7 +11,7 @@ packages:
   - name: kubernetes-sigs/kind@v0.29.0
   - name: kubernetes-sigs/kubebuilder@v4.7.1
   - name: kubernetes-sigs/kustomize@kustomize/v5.7.1
-  - name: kubernetes/kubectl@v1.33.5
+  - name: kubernetes/kubectl@v1.33.6
   - name: mikefarah/yq@v4.47.1
   - name: tilt-dev/ctlptl@v0.8.42
   - name: tilt-dev/tilt@v0.35.0
