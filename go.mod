@@ -10,9 +10,9 @@ require (
 	github.com/onsi/gomega v1.38.2
 	github.com/spf13/cobra v1.10.2
 	go.uber.org/zap v1.27.1
-	k8s.io/api v0.34.2
+	k8s.io/api v0.34.3
 	k8s.io/apimachinery v0.34.3
-	k8s.io/client-go v0.34.2
+	k8s.io/client-go v0.34.3
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
 	sigs.k8s.io/controller-runtime v0.22.4
 	sigs.k8s.io/yaml v1.6.0
