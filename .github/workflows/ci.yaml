@@ -31,9 +31,9 @@ jobs:
     strategy:
       matrix:
         k8s-version:
-          - v1.31.12 # renovate: kindest/node
-          - v1.32.8 # renovate: kindest/node
-          - v1.33.4 # renovate: kindest/node
+          - v1.31.14 # renovate: kindest/node
+          - v1.32.11 # renovate: kindest/node
+          - v1.33.7 # renovate: kindest/node
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
