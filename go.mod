@@ -11,7 +11,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	go.uber.org/zap v1.27.1
 	k8s.io/api v0.34.3
-	k8s.io/apimachinery v0.34.3
+	k8s.io/apimachinery v0.34.4
 	k8s.io/client-go v0.34.3
 	k8s.io/utils v0.0.0-20260108192941-914a6e750570
 	sigs.k8s.io/controller-runtime v0.22.4
