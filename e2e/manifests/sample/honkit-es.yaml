@@ -12,7 +12,7 @@ spec:
   buildSecrets:
     - name: build-secret
       key: ELASTIC_HOST
-  repoURL: https://github.com/zoetrope/honkit-sample.git
+  repoURL: https://github.com/neco-test/honkit-sample.git
   afterBuildScript:
     configMap:
       name: after-build-scripts

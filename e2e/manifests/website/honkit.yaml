@@ -9,7 +9,7 @@ spec:
     configMap:
       name: build-scripts
       key: build-honkit.sh
-  repoURL: https://github.com/zoetrope/honkit-sample.git
+  repoURL: https://github.com/neco-test/honkit-sample.git
   branch: main
   afterBuildScript:
     configMap:

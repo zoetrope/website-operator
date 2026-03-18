@@ -9,7 +9,7 @@ spec:
     configMap:
       name: build-scripts
       key: build-mkdocs.sh
-  repoURL: git@github.com:zoetrope/mkdocs-sample.git
+  repoURL: git@github.com:neco-test/mkdocs-sample.git
   branch: main
   deployKeySecretName: mkdocs-deploy-key
   extraResources:
