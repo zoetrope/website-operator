@@ -38,7 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Set previous release tag for GoReleaser
         run: |
-          export TAG=$(curl -s "https://api.github.com/repos/zoetrope/website-operator/releases/latest" | jq -r .tag_name)
+          export TAG=$(curl -s "https://api.github.com/repos/cybozu-go/website-operator/releases/latest" | jq -r .tag_name)
           echo "GORELEASER_PREVIOUS_TAG=${TAG}" >> $GITHUB_ENV
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7.0.0
@@ -58,7 +58,7 @@ jobs:
           fetch-depth: 0
       - name: Set chart version
         run: |
-          helm repo add website-operator https://zoetrope.github.io/website-operator
+          helm repo add website-operator https://cybozu-go.github.io/website-operator
           helm repo update
           
           # get the release tag version
@@ -81,7 +81,7 @@ jobs:
         run: |
           tag_version=${GITHUB_REF##*/}
           cat <<EOF > ./charts/website-operator/RELEASE.md
-          Helm chart for Website Operator [$tag_version](https://github.com/zoetrope/website-operator/releases/tag/$tag_version)
+          Helm chart for Website Operator [$tag_version](https://github.com/cybozu-go/website-operator/releases/tag/$tag_version)
           
           EOF
       - name: Configure Git
