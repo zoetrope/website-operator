@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cybozu-go/website-operator"
+	websitev1beta1 "github.com/cybozu-go/website-operator/api/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
-	"github.com/zoetrope/website-operator"
-	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"

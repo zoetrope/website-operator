@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	websitev1beta1 "github.com/cybozu-go/website-operator/api/v1beta1"
 	"github.com/cybozu-go/well"
-	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 )
 
 type RevisionClient interface {

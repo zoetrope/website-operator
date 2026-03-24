@@ -1,6 +1,6 @@
 package main
 
-import "github.com/zoetrope/website-operator/cmd/website-operator/cmd"
+import "github.com/cybozu-go/website-operator/cmd/website-operator/cmd"
 
 func main() {
 	cmd.Execute()
