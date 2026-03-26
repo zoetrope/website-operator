@@ -15,7 +15,7 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -X github.com/zoetrope/website-operator.Version={{.Version}}
+      - -X github.com/cybozu-go/website-operator.Version={{.Version}}
   - id: website-operator-ui
     env:
       - CGO_ENABLED=0
@@ -27,7 +27,7 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -X github.com/zoetrope/website-operator.Version={{.Version}}
+      - -X github.com/cybozu-go/website-operator.Version={{.Version}}
   - id: repo-checker
     env:
       - CGO_ENABLED=0
@@ -39,13 +39,13 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -X github.com/zoetrope/website-operator.Version={{.Version}}
+      - -X github.com/cybozu-go/website-operator.Version={{.Version}}
 before:
   hooks:
     - make frontend
 dockers:
   - image_templates:
-      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-amd64"
+      - "ghcr.io/cybozu-go/website-operator:{{ .Version }}-amd64"
     use: buildx
     dockerfile: ./Dockerfile
     ids:
@@ -59,7 +59,7 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
   - image_templates:
-      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-arm64"
+      - "ghcr.io/cybozu-go/website-operator:{{ .Version }}-arm64"
     use: buildx
     dockerfile: ./Dockerfile
     ids:
@@ -73,7 +73,7 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
   - image_templates:
-      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-amd64"
+      - "ghcr.io/cybozu-go/website-operator-ui:{{ .Version }}-amd64"
     use: buildx
     dockerfile: ./Dockerfile
     ids:
@@ -88,7 +88,7 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
   - image_templates:
-      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-arm64"
+      - "ghcr.io/cybozu-go/website-operator-ui:{{ .Version }}-arm64"
     use: buildx
     dockerfile: ./Dockerfile
     ids:
@@ -103,7 +103,7 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
   - image_templates:
-    - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-amd64"
+    - "ghcr.io/cybozu-go/repo-checker:{{ .Version }}-amd64"
     use: buildx
     dockerfile: ./Dockerfile
     ids:
@@ -117,7 +117,7 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
   - image_templates:
-      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-arm64"
+      - "ghcr.io/cybozu-go/repo-checker:{{ .Version }}-arm64"
     use: buildx
     dockerfile: ./Dockerfile
     ids:
@@ -131,30 +131,30 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
 docker_manifests:
-  - name_template: "ghcr.io/zoetrope/website-operator:{{ .Version }}"
+  - name_template: "ghcr.io/cybozu-go/website-operator:{{ .Version }}"
     image_templates:
-      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-amd64"
-      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-arm64"
-  - name_template: "ghcr.io/zoetrope/website-operator:{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/cybozu-go/website-operator:{{ .Version }}-amd64"
+      - "ghcr.io/cybozu-go/website-operator:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/cybozu-go/website-operator:{{ .Major }}.{{ .Minor }}"
     image_templates:
-      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-amd64"
-      - "ghcr.io/zoetrope/website-operator:{{ .Version }}-arm64"
-  - name_template: "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}"
+      - "ghcr.io/cybozu-go/website-operator:{{ .Version }}-amd64"
+      - "ghcr.io/cybozu-go/website-operator:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/cybozu-go/website-operator-ui:{{ .Version }}"
     image_templates:
-      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-amd64"
-      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-arm64"
-  - name_template: "ghcr.io/zoetrope/website-operator-ui:{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/cybozu-go/website-operator-ui:{{ .Version }}-amd64"
+      - "ghcr.io/cybozu-go/website-operator-ui:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/cybozu-go/website-operator-ui:{{ .Major }}.{{ .Minor }}"
     image_templates:
-      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-amd64"
-      - "ghcr.io/zoetrope/website-operator-ui:{{ .Version }}-arm64"
-  - name_template: "ghcr.io/zoetrope/repo-checker:{{ .Version }}"
+      - "ghcr.io/cybozu-go/website-operator-ui:{{ .Version }}-amd64"
+      - "ghcr.io/cybozu-go/website-operator-ui:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/cybozu-go/repo-checker:{{ .Version }}"
     image_templates:
-      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-amd64"
-      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-arm64"
-  - name_template: "ghcr.io/zoetrope/repo-checker:{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/cybozu-go/repo-checker:{{ .Version }}-amd64"
+      - "ghcr.io/cybozu-go/repo-checker:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/cybozu-go/repo-checker:{{ .Major }}.{{ .Minor }}"
     image_templates:
-      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-amd64"
-      - "ghcr.io/zoetrope/repo-checker:{{ .Version }}-arm64"
+      - "ghcr.io/cybozu-go/repo-checker:{{ .Version }}-amd64"
+      - "ghcr.io/cybozu-go/repo-checker:{{ .Version }}-arm64"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
