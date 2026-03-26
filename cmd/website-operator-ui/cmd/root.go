@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cybozu-go/website-operator"
 	"github.com/spf13/cobra"
-	"github.com/zoetrope/website-operator"
 )
 
 var config struct {

@@ -16,7 +16,7 @@ func TestPublicRepository(t *testing.T) {
 	}
 	defer os.RemoveAll(workDir)
 
-	rc := NewRepoChecker("https://github.com/zoetrope/honkit-sample.git", "main", workDir, 5*time.Second)
+	rc := NewRepoChecker("https://github.com/neco-test/honkit-sample.git", "main", workDir, 5*time.Second)
 	ctx := context.Background()
 	err = rc.Clone(ctx)
 	if err != nil {
@@ -59,7 +59,7 @@ func TestPrivateRepository(t *testing.T) {
 	}
 	defer os.RemoveAll(workDir)
 
-	rc := NewRepoChecker("git@github.com:zoetrope/mkdocs-sample.git", "main", workDir, 5*time.Second)
+	rc := NewRepoChecker("git@github.com:neco-test/mkdocs-sample.git", "main", workDir, 5*time.Second)
 	ctx := context.Background()
 	err = rc.Clone(ctx)
 	if err != nil {

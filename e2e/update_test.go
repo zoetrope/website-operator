@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	websitev1beta1 "github.com/cybozu-go/website-operator/api/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 )
 

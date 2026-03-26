@@ -1,4 +1,4 @@
-module github.com/zoetrope/website-operator
+module github.com/cybozu-go/website-operator
 
 go 1.25.5
 

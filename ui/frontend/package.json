@@ -6,7 +6,7 @@
     "start": "parcel ./src/index.html",
     "build": "rm -rf dist/* && parcel build ./src/index.html"
   },
-  "author": "zoetrope",
+  "author": "cybozu-go",
   "license": "MIT",
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.10",

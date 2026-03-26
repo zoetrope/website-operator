@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/cybozu-go/log"
-	"github.com/zoetrope/website-operator/api/v1beta1"
-	"github.com/zoetrope/website-operator/controllers"
+	"github.com/cybozu-go/website-operator/api/v1beta1"
+	"github.com/cybozu-go/website-operator/controllers"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"

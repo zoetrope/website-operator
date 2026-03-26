@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/cybozu-go/website-operator/checker"
 	"github.com/cybozu-go/well"
-	"github.com/zoetrope/website-operator/checker"
 )
 
 func subMain(ctx context.Context) error {

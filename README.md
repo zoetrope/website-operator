@@ -1,7 +1,7 @@
-[![GitHub release](https://img.shields.io/github/release/zoetrope/website-operator.svg?maxAge=60)](https://github.com/zoetrope/website-operator/releases)
-[![CI](https://github.com/zoetrope/website-operator/actions/workflows/ci.yaml/badge.svg)](https://github.com/zoetrope/website-operator/actions/workflows/ci.yaml)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/zoetrope/website-operator?tab=overview)](https://pkg.go.dev/github.com/zoetrope/website-operator?tab=overview)
-[![Go Report Card](https://goreportcard.com/badge/github.com/zoetrope/website-operator)](https://goreportcard.com/report/github.com/zoetrope/website-operator)
+[![GitHub release](https://img.shields.io/github/release/cybozu-go/website-operator.svg?maxAge=60)](https://github.com/cybozu-go/website-operator/releases)
+[![CI](https://github.com/cybozu-go/website-operator/actions/workflows/ci.yaml/badge.svg)](https://github.com/cybozu-go/website-operator/actions/workflows/ci.yaml)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/cybozu-go/website-operator?tab=overview)](https://pkg.go.dev/github.com/cybozu-go/website-operator?tab=overview)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/website-operator)](https://goreportcard.com/report/github.com/cybozu-go/website-operator)
 [![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com/)
 
 # website-operator
@@ -14,7 +14,7 @@ All resources (Namespace, CustomResourceDefinitions, Deployment and RBACs) are i
 You can just install the manifest as follows:
 
 ```console
-helm repo add website-operator https://zoetrope.github.io/website-operator
+helm repo add website-operator https://cybozu-go.github.io/website-operator
 helm repo update
 helm install --create-namespace --namespace website-operator-system website-operator website-operator/website-operator
 ```
@@ -25,7 +25,7 @@ First, you need to prepare a repository of the content you want to deploy.
 
 Here's some examples:
 
-- [https://github.com/zoetrope/honkit-sample](https://github.com/zoetrope/honkit-sample)
+- [https://github.com/neco-test/honkit-sample](https://github.com/neco-test/honkit-sample)
 - [https://github.com/gatsbyjs/gatsby-starter-default](https://github.com/gatsbyjs/gatsby-starter-default)
 
 To deploy a site to a Kubernetes cluster you can use the following CustomResource:
@@ -55,7 +55,7 @@ spec:
         #!/bin/bash -ex
         curl -k -X POST https://elasticsearch:9200/test/_bulk -H 'Content-Type: application/json'  --data-binary @index.json
 
-  repoURL: https://github.com/zoetrope/honkit-sample.git
+  repoURL: https://github.com/neco-test/honkit-sample.git
   branch: main
 ```
 
@@ -123,7 +123,7 @@ spec:
     configMap:
       name: build-scripts
       key: build.sh
-  repoURL: https://github.com/zoetrope/honkit-sample.git
+  repoURL: https://github.com/neco-test/honkit-sample.git
   branch: main
 ```
 
@@ -177,7 +177,7 @@ spec:
     configMap:
       name: build-scripts
       key: build-mkdocs.sh
-  repoURL: git@github.com:zoetrope/mkdocs-sample.git
+  repoURL: git@github.com:neco-test/mkdocs-sample.git
   branch: main
   deployKeySecretName: your-deploy-key
 ```
@@ -232,7 +232,7 @@ spec:
     configMap:
       name: build-scripts
       key: build-honkit.sh
-  repoURL: https://github.com/zoetrope/honkit-sample.git
+  repoURL: https://github.com/neco-test/honkit-sample.git
   branch: main
   extraResources:
     - configMap:

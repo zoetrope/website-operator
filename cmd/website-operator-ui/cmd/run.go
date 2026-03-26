@@ -3,9 +3,9 @@ package cmd
 import (
 	"net/http"
 
+	websitev1beta1 "github.com/cybozu-go/website-operator/api/v1beta1"
+	"github.com/cybozu-go/website-operator/ui/backend"
 	"github.com/cybozu-go/well"
-	websitev1beta1 "github.com/zoetrope/website-operator/api/v1beta1"
-	"github.com/zoetrope/website-operator/ui/backend"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
