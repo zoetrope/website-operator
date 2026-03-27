@@ -8,6 +8,6 @@ spec:
     spec:
       containers:
         - name: manager
-          image: ghcr.io/zoetrope/website-operator:dev-amd64
+          image: ghcr.io/cybozu-go/website-operator:dev-amd64
           args:
-            - --repochecker-container-image=ghcr.io/zoetrope/repo-checker:dev-amd64
+            - --repochecker-container-image=ghcr.io/cybozu-go/repo-checker:dev-amd64
