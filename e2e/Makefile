@@ -1,5 +1,5 @@
 KUBERNETES_VERSION := v1.33.7 # renovate: kindest/node
-REGISTRY := ghcr.io/zoetrope/
+REGISTRY := ghcr.io/cybozu-go/
 KIND_CLUSTER_NAME=website-e2e
 
 GO_FILES := $(shell find .. -path ../vendor -prune -o -path ../e2e -prune -o -name '*.go' -print)
