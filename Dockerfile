@@ -1,6 +1,6 @@
 FROM ghcr.io/zoetrope/ubuntu:22.04 as base
 
-LABEL org.opencontainers.image.source=https://github.com/zoetrope/website-operator
+LABEL org.opencontainers.image.source=https://github.com/cybozu-go/website-operator
 
 FROM base as website-operator
 COPY website-operator /

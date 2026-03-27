@@ -11,5 +11,5 @@ spec:
             - /website-operator
           args:
             - --leader-elect
-          image: ghcr.io/zoetrope/website-operator:dev
+          image: ghcr.io/cybozu-go/website-operator:dev
           name: manager

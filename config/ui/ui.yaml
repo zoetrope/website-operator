@@ -20,7 +20,7 @@ spec:
             - /website-operator-ui
           args:
             - --allow-cors=true
-          image: ghcr.io/zoetrope/website-operator-ui:dev
+          image: ghcr.io/cybozu-go/website-operator-ui:dev
           name: ui
           ports:
             - name: http
