@@ -10,7 +10,7 @@
   "labels": [
     "dependencies"
   ],
-  minimumReleaseAge: "7 days",
+  minimumReleaseAge: "14 days",
   "packageRules": [
     {
       "description": "Group all minor and patch updates",
