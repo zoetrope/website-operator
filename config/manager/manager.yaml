@@ -31,8 +31,8 @@ spec:
             - /website-operator
           args:
             - --leader-elect
-            - --repochecker-container-image=ghcr.io/zoetrope/repo-checker:dev
-          image: ghcr.io/zoetrope/website-operator:dev
+            - --repochecker-container-image=ghcr.io/cybozu-go/repo-checker:dev
+          image: ghcr.io/cybozu-go/website-operator:dev
           name: manager
           securityContext:
             allowPrivilegeEscalation: false

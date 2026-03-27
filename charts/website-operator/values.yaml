@@ -1,6 +1,6 @@
 controller:
   image:
-    repository: ghcr.io/zoetrope/website-operator
+    repository: ghcr.io/cybozu-go/website-operator
     tag: app-version-placeholder
   replicas: 1
   config:
@@ -13,7 +13,7 @@ controller:
       bindAddress: 127.0.0.1:8080
 ui:
   image:
-    repository: ghcr.io/zoetrope/website-operator-ui
+    repository: ghcr.io/cybozu-go/website-operator-ui
     tag: app-version-placeholder
   replicas: 1
   service:
